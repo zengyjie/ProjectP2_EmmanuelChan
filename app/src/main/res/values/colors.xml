@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tan_light">#FDF6E3</color>
+    <color name="tan_dark">#D9C7A1</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="darkGray">#444444</color>
+    <color name="light_black">#121212</color>
+</resources>
