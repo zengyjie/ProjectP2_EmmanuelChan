@@ -226,9 +226,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:background="#00FFFFFF"
             android:backgroundTint="@android:color/holo_blue_dark"
             android:text="Confirm"
-            android:textColor="@android:color/white" />
+            android:textColor="?attr/colorOnPrimary" />
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#00FFFFFF"
+            android:backgroundTint="#00FFFFFF"
+            android:text="Delete Fridge"
+            android:textColor="?attr/colorError" />
 
     </LinearLayout>
 </ScrollView>

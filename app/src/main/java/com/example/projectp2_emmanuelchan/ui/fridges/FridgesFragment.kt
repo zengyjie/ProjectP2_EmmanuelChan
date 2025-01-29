@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.TextView
+import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -47,14 +48,12 @@ class FridgesFragment : Fragment() {
         val fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
-        fridgeAdapter = FridgeAdapter(fridges) { fridge ->
-            openFridge(fridge)
-        }
+        fridgeAdapter = FridgeAdapter(fridges, { fridge -> openFridge(fridge) }, { fridge -> showEditFridgePopup(fridge) })
         fridgeRecyclerView.adapter = fridgeAdapter
 
         //FAB
         val floatingActionButton: FloatingActionButton = binding.root.findViewById(R.id.floatingActionButton)
-        floatingActionButton.setOnClickListener {showAddFridgePopup()}
+        floatingActionButton.setOnClickListener { showAddFridgePopup() }
 
         //dummy values
         addFridge(Fridge())
@@ -73,41 +72,56 @@ class FridgesFragment : Fragment() {
         val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setView(dialogView)
         val dialog = dialogBuilder.create()
+        dialogView.findViewById<Button>(R.id.deleteButton).visibility = View.GONE
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
-            val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
-            val name = nameEditText?.text.toString().trim()
-
-            if (name.isEmpty()) {
-                toast("Please choose a name")
-                return@setOnClickListener
-            }
-            if (name.equals("null", ignoreCase = true)) {
-                toast("Invalid name")
-                return@setOnClickListener
-            }
-            if (fridges.any { it.name.equals(name, ignoreCase = true) }) {
-                toast("Name already in use")
-                return@setOnClickListener
-            }
-
-            var icon: Int = R.drawable.default_fridge
-            var depth: Int
-            if (dialogView.findViewById<RadioButton>(R.id.fridge1RadioButton)!!.isSelected) { icon = R.drawable.fridge_1 }
-            if (dialogView.findViewById<RadioButton>(R.id.fridge2RadioButton)!!.isSelected) { icon = R.drawable.fridge_2 }
-            if (dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked) { depth = 2 } else { depth = 1 }
-            addFridge(
-                Fridge(
-                    name = name,
-                    icon = icon,
-                    sections = dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count,
-                    columns = dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count,
-                    rps = dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count,
-                    depth = depth
-                )
-            )
+            val fridge = readFridgeData(dialogView)
+            if (!fridge.name.equals("\\InvalidName")) { addFridge(fridge) } else { return@setOnClickListener}
             dialog.dismiss()
         }
+        dialog.show()
+    }
+
+    fun showEditFridgePopup(fridge: Fridge) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.add_fridge, null)
+        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+        val dialog = dialogBuilder.create()
+
+        dialogView.findViewById<TextView>(R.id.titleTextView)?.text = "Edit Fridge"
+        dialogView.findViewById<TextView>(R.id.nameEditText).text = fridge.name
+        dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count = fridge.sections
+        dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count = fridge.columns
+        dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count = fridge.rps
+        dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked = fridge.depth == 1
+
+        dialogView.findViewById<Button>(R.id.deleteButton).setOnClickListener {
+            val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(confirmDeleteView)
+            val deleteDialog = confirmDialogBuilder.create()
+
+            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${fridge.name}?"
+
+            confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                removeFridge(fridge)
+                deleteDialog.dismiss()
+                dialog.dismiss()
+            }
+
+            confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                deleteDialog.dismiss()
+            }
+
+            deleteDialog.show()
+        }
+
+        dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
+            val newFridge = readFridgeData(dialogView)
+            if (!fridge.name.equals("\\InvalidName")) { editFridge(fridge, newFridge) } else { return@setOnClickListener}
+            dialog.dismiss()
+        }
+
         dialog.show()
     }
 
@@ -115,6 +129,24 @@ class FridgesFragment : Fragment() {
         selectedFridge = fridge
         FridgeActivity.start(requireContext())
     }
+
+    private fun toast(message: String) {
+        context?.let {
+            Toast.makeText(it, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //Fridge class
+    data class Fridge (
+        var name: String = "New fridge",
+        var icon: Int = R.drawable.default_fridge,
+        var sections: Int = 1,
+        var columns: Int = 1,
+        var rps: Int = 1,
+        var depth: Int = 1,
+        var capacity: Int = sections * columns * rps * depth,
+        var wines: MutableList<Wine> = mutableListOf()
+    )
 
     fun getFridge(name: String): Fridge {
         for (f in fridges) {
@@ -125,24 +157,6 @@ class FridgesFragment : Fragment() {
         return Fridge(name="null")
     }
 
-    private fun toast(message: String) {
-        context?.let {
-            android.widget.Toast.makeText(it, message, android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    //data classes
-    data class Fridge (
-        val name: String = "New fridge",
-        val icon: Int = R.drawable.default_fridge,
-        val sections: Int = 1,
-        val columns: Int = 1,
-        val rps: Int = 1,
-        val depth: Int = 1,
-        val capacity: Int = sections * columns * rps * depth,
-        val wines: MutableList<Wine> = mutableListOf()
-    )
-
     fun addFridge(fridge: Fridge) {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
@@ -150,6 +164,56 @@ class FridgesFragment : Fragment() {
         fridgeAdapter.notifyDataSetChanged()
     }
 
+    fun removeFridge(fridge: Fridge) {
+        fridges.remove(fridge)
+        fridgeAdapter.notifyDataSetChanged()
+    }
+
+    fun editFridge(fridge: Fridge, newFridge: Fridge) {
+        fridge.name = newFridge.name
+        fridge.icon = newFridge.icon
+        fridge.sections = newFridge.sections
+        fridge.columns = newFridge.columns
+        fridge.rps = newFridge.rps
+        fridge.depth = newFridge.depth
+        fridge.capacity = newFridge.capacity
+        fridgeAdapter.notifyDataSetChanged()
+    }
+
+    fun readFridgeData(dialogView: View): Fridge {
+        val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
+        val name = nameEditText?.text.toString().trim()
+
+        if (name.isEmpty()) {
+            toast("Please choose a name")
+            return Fridge("\\InvalidName")
+        }
+        if (name.equals("null", ignoreCase = true) || name.contains("\\")) {
+            toast("Invalid name")
+            return Fridge("\\InvalidName")
+        }
+        if (fridges.any { it.name.equals(name, ignoreCase = true) }) {
+            toast("Name already in use")
+            return Fridge("\\InvalidName")
+        }
+
+        var icon: Int = R.drawable.default_fridge
+        var depth: Int
+        if (dialogView.findViewById<RadioButton>(R.id.fridge1RadioButton)!!.isSelected) { icon = R.drawable.fridge_1 }
+        if (dialogView.findViewById<RadioButton>(R.id.fridge2RadioButton)!!.isSelected) { icon = R.drawable.fridge_2 }
+        if (dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked) { depth = 2 } else { depth = 1 }
+
+        return Fridge(
+            name = name,
+            icon = icon,
+            sections = dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count,
+            columns = dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count,
+            rps = dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count,
+            depth = depth
+        )
+    }
+
+    //Wine class
     data class Wine(
         val name: String = "My Wine",
         val price: Int = 10,
@@ -173,7 +237,8 @@ class FridgesFragment : Fragment() {
     //adapter
     class FridgeAdapter(
         private val fridges: List<Fridge>,
-        private val onProductClick: (Fridge) -> Unit
+        private val onFridgeClick: (Fridge) -> Unit,
+        private val onFridgeLongClick: (Fridge) -> Unit
     ) : RecyclerView.Adapter<FridgeAdapter.FridgeViewHolder>() {
 
         class FridgeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -194,7 +259,12 @@ class FridgesFragment : Fragment() {
             holder.fridgeNameTextView.text = fridge.name
             holder.fridgeWineCountTextView.text = "Wines: ${fridge.wines.size}/${fridge.capacity}"
 
-            holder.itemView.setOnClickListener { onProductClick(fridge) }
+            holder.itemView.setOnClickListener { onFridgeClick(fridge) }
+
+            holder.itemView.setOnLongClickListener {
+                onFridgeLongClick(fridge)
+                true
+            }
         }
 
         override fun getItemCount(): Int = fridges.size
