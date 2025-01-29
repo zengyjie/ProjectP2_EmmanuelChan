@@ -57,39 +57,41 @@
 
             <RadioButton
                 android:id="@+id/defaultFridgeRadioButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="@style/radioButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_weight="1"
-                android:background="@drawable/radio_button_background"
                 android:button="@null"
-                android:foreground="@drawable/default_fridge" />
+                android:drawableTop="@drawable/default_fridge_icon"
+                android:drawableTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/fridge1RadioButton"
+                style="@style/radioButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_weight="1"
-                android:background="@drawable/radio_button_background"
                 android:button="@null"
-                android:foreground="@drawable/default_fridge" />
+                android:drawableTop="@drawable/fridge_1_icon"
+                android:drawableTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/fridge2RadioButton"
+                style="@style/radioButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_weight="1"
-                android:background="@drawable/radio_button_background"
                 android:button="@null"
-                android:foreground="@drawable/default_fridge" />
+                android:drawableTop="@drawable/fridge_2_icon"
+                android:drawableTint="?attr/colorSecondary" />
 
             <Space
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10" />
+                android:layout_weight="15" />
 
         </RadioGroup>
 
-        <!-- Sections -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -125,7 +127,6 @@
                 android:layout_weight="0.5" />
         </LinearLayout>
 
-        <!-- Columns -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -155,7 +156,6 @@
                 android:layout_weight="0.5" />
         </LinearLayout>
 
-        <!-- Rows per Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -186,7 +186,6 @@
 
         </LinearLayout>
 
-        <!-- Orientation -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -220,7 +219,6 @@
 
         </LinearLayout>
 
-        <!-- Confirm Button -->
         <Button
             android:id="@+id/confirmButton"
             android:layout_width="match_parent"
