@@ -29,12 +29,16 @@
             android:id="@+id/filterButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:background="#00FFFFFF"
+            android:backgroundTint="#00FFFFFF"
             android:src="@drawable/ic_filter" />
 
         <ImageButton
             android:id="@+id/searchButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:background="#00FFFFFF"
+            android:backgroundTint="#00FFFFFF"
             android:src="@drawable/ic_search" />
     </LinearLayout>
 

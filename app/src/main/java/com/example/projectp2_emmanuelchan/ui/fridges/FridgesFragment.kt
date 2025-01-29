@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.TextView
@@ -15,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectp2_emmanuelchan.FridgeActivity
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentFridgesBinding
 import com.example.projectp2_emmanuelchan.ui.custom.CustomSpinner
@@ -27,6 +27,7 @@ class FridgesFragment : Fragment() {
 
     companion object {
         var fridges = mutableListOf<Fridge>()
+        var selectedFridge: Fridge = Fridge()
     }
 
     private lateinit var fridgeAdapter: FridgeAdapter
@@ -111,7 +112,8 @@ class FridgesFragment : Fragment() {
     }
 
     fun openFridge(fridge: Fridge) {
-        //TODO
+        selectedFridge = fridge
+        FridgeActivity.start(requireContext())
     }
 
     fun getFridge(name: String): Fridge {
