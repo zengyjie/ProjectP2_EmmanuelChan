@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 
@@ -28,6 +29,8 @@ class FridgeActivity : AppCompatActivity() {
         var fridge = FridgesFragment.selectedFridge
         title = fridge.name
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        var fridgeRecyclerView = findViewById<RecyclerView>(R.id.fridgeRecyclerView)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

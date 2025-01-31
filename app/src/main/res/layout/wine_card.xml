@@ -1,0 +1,20 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="?android:colorBackground"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <ImageView
+        android:id="@+id/fridgeImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
+        android:scaleType="centerCrop"
+        app:srcCompat="@drawable/bottle_front"
+        tools:srcCompat="@drawable/bottle_front" />
+
+</androidx.cardview.widget.CardView>
