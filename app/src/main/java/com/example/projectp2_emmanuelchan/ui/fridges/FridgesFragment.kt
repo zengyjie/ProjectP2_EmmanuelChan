@@ -145,7 +145,7 @@ class FridgesFragment : Fragment() {
         var rps: Int = 1,
         var depth: Int = 1,
         var capacity: Int = sections * columns * rps * depth,
-        var wines: MutableList<Wine> = mutableListOf()
+        var wines: MutableList<Wine> = mutableListOf() //TODO create default full list
     )
 
     fun getFridge(name: String): Fridge {
@@ -215,7 +215,7 @@ class FridgesFragment : Fragment() {
 
     //Wine class
     data class Wine(
-        val name: String = "My Wine",
+        val name: String = "null",
         val price: Int = 10,
         val year: Int = 2000,
         val type: String = "Red",
@@ -242,7 +242,7 @@ class FridgesFragment : Fragment() {
     ) : RecyclerView.Adapter<FridgeAdapter.FridgeViewHolder>() {
 
         class FridgeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val fridgeImageView: ImageView = view.findViewById(R.id.fridgeImageView)
+            val fridgeImageView: ImageView = view.findViewById(R.id.wineImageView)
             val fridgeNameTextView: TextView = view.findViewById(R.id.fridgeNameTextView)
             val fridgeWineCountTextView: TextView = view.findViewById(R.id.fridgeWineCountTextView)
         }

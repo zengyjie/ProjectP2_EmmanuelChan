@@ -9,7 +9,7 @@
     app:cardElevation="4dp">
 
     <ImageView
-        android:id="@+id/fridgeImageView"
+        android:id="@+id/wineImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?android:attr/colorBackground"

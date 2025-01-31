@@ -17,7 +17,7 @@
             android:orientation="vertical">
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/fridgeRecyclerView"
+                android:id="@+id/wineRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>
