@@ -76,7 +76,7 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val fridge = readFridgeData(dialogView)
-            if (!fridge.name.equals("\\InvalidName")) { addFridge(fridge) } else { return@setOnClickListener}
+            if (!fridge.name.startsWith("InvalidName")) { addFridge(fridge) } else { return@setOnClickListener}
             dialog.dismiss()
         }
         dialog.show()
@@ -90,10 +90,10 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<TextView>(R.id.titleTextView)?.text = "Edit Fridge"
         dialogView.findViewById<TextView>(R.id.nameEditText).text = fridge.name
-        dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count = fridge.sections
-        dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count = fridge.columns
-        dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count = fridge.rps
-        dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked = fridge.depth == 1
+        dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count(fridge.sections)
+        dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count(fridge.columns)
+        dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count(fridge.rps)
+        dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked = fridge.depth != 1
 
         dialogView.findViewById<Button>(R.id.deleteButton).setOnClickListener {
             val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
@@ -118,7 +118,8 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val newFridge = readFridgeData(dialogView)
-            if (!fridge.name.equals("\\InvalidName")) { editFridge(fridge, newFridge) } else { return@setOnClickListener}
+            if (newFridge.name.equals("InvalidName")) { newFridge.name = fridge.name }
+            editFridge(fridge, newFridge)
             dialog.dismiss()
         }
 
@@ -180,21 +181,23 @@ class FridgesFragment : Fragment() {
         fridgeAdapter.notifyDataSetChanged()
     }
 
-    fun readFridgeData(dialogView: View): Fridge {
+    fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
         val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
-        val name = nameEditText?.text.toString().trim()
+        var name = nameEditText?.text.toString().trim()
 
         if (name.isEmpty()) {
             toast("Please choose a name")
-            return Fridge("\\InvalidName")
+            name = "InvalidName"
         }
         if (name.equals("null", ignoreCase = true) || name.contains("\\")) {
             toast("Invalid name")
-            return Fridge("\\InvalidName")
+            name = "InvalidName"
         }
         if (fridges.any { it.name.equals(name, ignoreCase = true) }) {
-            toast("Name already in use")
-            return Fridge("\\InvalidName")
+            if (!edit) {
+                toast("Name already in use")
+                name = "InvalidName"
+            }
         }
 
         var icon: Int = R.drawable.default_fridge

@@ -2,6 +2,9 @@ package com.example.projectp2_emmanuelchan
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.TypedArray
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -31,14 +34,21 @@ class FridgeActivity : AppCompatActivity() {
         binding = ActivityFridgeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        var fridge = FridgesFragment.selectedFridge
+        val fridge = FridgesFragment.selectedFridge
         title = fridge.name
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        var wineRecyclerView = findViewById<RecyclerView>(R.id.wineRecyclerView)
-        wineRecyclerView.layoutManager = GridLayoutManager(this, fridge.columns)
-        var wineAdapter = WineAdapter(fridge.wines, fridge.rps, { wine -> openWine(wine) })
+        val wineRecyclerView = findViewById<RecyclerView>(R.id.wineRecyclerView)
+        val layoutManager = GridLayoutManager(this, fridge.columns)
+        wineRecyclerView.layoutManager = layoutManager
+        val wineAdapter = WineAdapter(fridge) { wine ->
+            if (wine != null) {
+                openWine(wine)
+            }
+        }
         wineRecyclerView.adapter = wineAdapter
+
+        wineRecyclerView.addItemDecoration(RowSeparatorDecoration(this, fridge.rps))
     }
 
     private fun openWine(wine: FridgesFragment.Wine) {
@@ -57,55 +67,77 @@ class FridgeActivity : AppCompatActivity() {
 
     //adapter
     class WineAdapter(
-        private val wines: List<FridgesFragment.Wine>,
-        private val rps: Int,  // Rows per section
-        private val onWineClick: (FridgesFragment.Wine) -> Unit
-    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        private val fridge: FridgesFragment.Fridge,
+        private val onWineClick: (FridgesFragment.Wine?) -> Unit
+    ) : RecyclerView.Adapter<WineAdapter.WineViewHolder>() {
 
-        companion object {
-            private const val VIEW_TYPE_WINE = 0
-            private const val VIEW_TYPE_SEPARATOR = 1
+        private val totalSlots = fridge.sections * fridge.columns * fridge.rps * fridge.depth
+        private val winesWithPlaceholders: List<FridgesFragment.Wine?> = List(totalSlots) { index ->
+            fridge.wines.getOrNull(index) // Fill empty slots with null
         }
 
-        override fun getItemViewType(position: Int): Int {
-            return if ((position + 1) % (rps + 1) == 0) VIEW_TYPE_SEPARATOR else VIEW_TYPE_WINE
+        override fun getItemCount(): Int = totalSlots
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WineViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.wine_card, parent, false)
+            return WineViewHolder(view)
         }
 
-        override fun getItemCount() = 1
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            return if (viewType == VIEW_TYPE_WINE) {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.wine_card, parent, false)
-                WineViewHolder(view)
-            } else {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.separator_item, parent, false)
-                SeparatorViewHolder(view)
-            }
-        }
-
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            if (getItemViewType(position) == VIEW_TYPE_WINE) {
-                val wineIndex = position - (position / (rps + 1)) // Adjust for separators
-                val wine = wines[wineIndex]
-                (holder as WineViewHolder).bind(wine)
-            }
+        override fun onBindViewHolder(holder: WineViewHolder, position: Int) {
+            holder.bind(winesWithPlaceholders[position])
         }
 
         class WineViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             private val wineImageView: ImageView = view.findViewById(R.id.wineImageView)
 
-            fun bind(wine: FridgesFragment.Wine) {
-                if (wine.name.equals("null")) {
+            fun bind(wine: FridgesFragment.Wine?) {
+                if (wine == null) {
                     wineImageView.setImageResource(R.drawable.ic_add)
                 } else {
                     wineImageView.setImageResource(R.drawable.bottle_front)
                 }
             }
         }
+    }
 
-        class SeparatorViewHolder(view: View) : RecyclerView.ViewHolder(view)
+    //separator
+    class RowSeparatorDecoration(
+        context: Context,
+        private val rps: Int
+    ) : RecyclerView.ItemDecoration() {
+
+        private val divider: Drawable?
+
+        init {
+            val attrs = intArrayOf(android.R.attr.listDivider)
+            val typedArray: TypedArray = context.obtainStyledAttributes(attrs)
+            divider = typedArray.getDrawable(0)
+            typedArray.recycle()
+        }
+
+        override fun onDraw(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+            if (divider == null) return
+
+            val childCount = parent.childCount
+            val layoutManager = parent.layoutManager as GridLayoutManager
+            val columns = layoutManager.spanCount
+
+            for (i in 0 until childCount) {
+                val child = parent.getChildAt(i)
+                val position = parent.getChildAdapterPosition(child)
+                if ((position + 1) % (rps * columns) == 0) {
+                    val params = child.layoutParams as RecyclerView.LayoutParams
+                    val left = parent.paddingLeft
+                    val right = parent.width - parent.paddingRight
+                    val top = child.bottom + params.bottomMargin
+                    val bottom = top + (divider?.intrinsicHeight ?: 4)
+
+                    divider.setBounds(left, top, right, bottom)
+                    divider.draw(canvas)
+                }
+            }
+        }
     }
 
 }

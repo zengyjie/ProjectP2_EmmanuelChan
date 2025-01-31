@@ -34,7 +34,6 @@ class CustomSpinner : LinearLayout {
         findViewById<Button>(R.id.decrementButton).setOnClickListener { updateCount(-1) }
         findViewById<Button>(R.id.incrementButton).setOnClickListener { updateCount(1) }
         countTextView = findViewById(R.id.countTextView)
-
         updateCount(0)
     }
 
@@ -42,5 +41,10 @@ class CustomSpinner : LinearLayout {
         count += delta
         count.coerceIn(1, 20)
         countTextView!!.text = count.toString()
+    }
+
+    fun count(count: Int) {
+        this.count = count
+        updateCount(0)
     }
 }
