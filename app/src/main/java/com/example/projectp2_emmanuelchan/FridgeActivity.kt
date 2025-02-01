@@ -30,7 +30,11 @@ class FridgeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        when (sharedPreferences.getInt("theme", 0)) {
+            0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
+            1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
+        }
         binding = ActivityFridgeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -47,8 +51,9 @@ class FridgeActivity : AppCompatActivity() {
             }
         }
         wineRecyclerView.adapter = wineAdapter
-
         wineRecyclerView.addItemDecoration(RowSeparatorDecoration(this, fridge.rps))
+
+        if (fridge.depth == 1) { binding.depthToggleButton.isClickable = false }
     }
 
     private fun openWine(wine: FridgesFragment.Wine) {
@@ -123,7 +128,7 @@ class FridgeActivity : AppCompatActivity() {
             val layoutManager = parent.layoutManager as GridLayoutManager
             val columns = layoutManager.spanCount
 
-            for (i in 0 until childCount) {
+            for (i in 0 until childCount - 1) {
                 val child = parent.getChildAt(i)
                 val position = parent.getChildAdapterPosition(child)
                 if ((position + 1) % (rps * columns) == 0) {

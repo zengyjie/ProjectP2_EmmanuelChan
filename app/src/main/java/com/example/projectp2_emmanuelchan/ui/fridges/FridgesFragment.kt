@@ -247,7 +247,7 @@ class FridgesFragment : Fragment() {
         class FridgeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val fridgeImageView: ImageView = view.findViewById(R.id.wineImageView)
             val fridgeNameTextView: TextView = view.findViewById(R.id.fridgeNameTextView)
-            val fridgeWineCountTextView: TextView = view.findViewById(R.id.fridgeWineCountTextView)
+            val fridgeWineCountTextView: TextView = view.findViewById(R.id.wineDescTextView)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FridgeViewHolder {
