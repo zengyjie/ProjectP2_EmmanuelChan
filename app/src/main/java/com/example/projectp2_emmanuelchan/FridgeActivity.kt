@@ -1,34 +1,38 @@
 package com.example.projectp2_emmanuelchan
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.TypedArray
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
-import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
 
 class FridgeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFridgeBinding
+    private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private var capturedImage: Bitmap? = null
 
     companion object {
         fun start(context: Context) {
@@ -36,7 +40,7 @@ class FridgeActivity : AppCompatActivity() {
             context.startActivity(intent)
         }
 
-         fun getIndicesFromPosition(position: Int, fridge: FridgesFragment.Fridge): MutableList<Int> {
+        fun getIndicesFromPosition(position: Int, fridge: FridgesFragment.Fridge): MutableList<Int> {
             val perLayer = fridge.sections * fridge.rps * fridge.columns
             val layer = position / perLayer
             val positionInLayer = position % perLayer
@@ -51,7 +55,6 @@ class FridgeActivity : AppCompatActivity() {
 
             return mutableListOf(layer, section, row, column)
         }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,11 +78,25 @@ class FridgeActivity : AppCompatActivity() {
         wineRecyclerView.adapter = wineAdapter
         wineRecyclerView.addItemDecoration(RowSeparatorDecoration(this, fridge.rps))
 
-        if (fridge.depth == 1) { binding.depthToggleButton.isClickable = false }
+        if (fridge.depth == 1) {
+            binding.depthToggleButton.isClickable = false
+        }
         binding.depthToggleButton.setOnCheckedChangeListener { _, isChecked ->
             val selectedLayer = if (isChecked) 1 else 0
             val newAdapter = WineAdapter(fridge, selectedLayer)
             wineRecyclerView.adapter = newAdapter
+        }
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                imageBitmap?.let {
+                    capturedImage = it
+                    Toast.makeText(this, "Image captured successfully", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -91,65 +108,22 @@ class FridgeActivity : AppCompatActivity() {
 
         dialogView.findViewById<MaterialTextView>(R.id.editTitleTextView)?.text = "Add Wine"
 
+        val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-            //TODO
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            cameraLauncher.launch(cameraIntent)
+        }
+        capturedImage?.let {
+            wineImageView.setImageBitmap(it)
         }
 
-        val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.editWineType)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.wine_types,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            wineTypeSpinner.adapter = adapter
-        }
-
-        val saveButton = dialogView.findViewById<Button>(R.id.saveButton)
-        saveButton.text = "Add"
-        saveButton.setOnClickListener {
-            val name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text?.toString()
-            val type = dialogView.findViewById<Spinner>(R.id.editWineType)?.selectedItem?.toString()
-            val year = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.text?.toString()?.toIntOrNull()
-            val vineyard = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)?.text?.toString()
-            val region = dialogView.findViewById<TextInputEditText>(R.id.editRegion)?.text?.toString()
-            val variety = dialogView.findViewById<TextInputEditText>(R.id.editVariety)?.text?.toString()
-            val rating = dialogView.findViewById<TextInputEditText>(R.id.editRating)?.text?.toString()?.toDoubleOrNull()
-            val price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text?.toString()?.toIntOrNull()
-            val drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text?.toString()?.toIntOrNull()
-            val description = dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.text?.toString()
-
-            if (name.isNullOrEmpty() || type.isNullOrEmpty() || year == null || vineyard.isNullOrEmpty() ||
-                region.isNullOrEmpty() || variety.isNullOrEmpty() || rating == null || price == null ||
-                drinkBy == null || description.isNullOrEmpty()
-            ) {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Create a new wine object
-            val tempWine = FridgesFragment.Wine(
-                name = name,
-                type = type,
-                year = year,
-                vineyard = vineyard,
-                region = region,
-                grapeVariety = variety,
-                rating = rating,
-                price = price,
-                drinkBy = drinkBy,
-                description = description
-            )
-
+        dialog.findViewById<Button>(R.id.saveButton)?.setOnClickListener {
+            val tempWine = FridgesFragment.Wine()//populate
             val fridge = FridgesFragment.selectedFridge
             val indices = getIndicesFromPosition(index, fridge)
             fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = tempWine
-
-            val wineRecyclerView = findViewById<RecyclerView>(R.id.wineRecyclerView)
-            (wineRecyclerView.adapter as WineAdapter).notifyItemChanged(index)
-
-            dialog.dismiss()
         }
+
 
         dialog.show()
     }
