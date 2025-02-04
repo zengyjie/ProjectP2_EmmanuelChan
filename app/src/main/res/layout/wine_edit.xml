@@ -13,6 +13,7 @@
         android:background="?android:colorBackground">
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/editTitleTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
@@ -23,7 +24,6 @@
             android:textStyle="bold" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/relativeLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp">
@@ -64,6 +64,27 @@
                 android:hint="Name"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=" Type" />
+
+            <Spinner
+                android:id="@+id/editWineType"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:spinnerMode="dropdown" />
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -177,7 +198,7 @@
                 android:id="@+id/editDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Description"
+                android:hint="Notes"
                 android:inputType="textMultiLine"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>

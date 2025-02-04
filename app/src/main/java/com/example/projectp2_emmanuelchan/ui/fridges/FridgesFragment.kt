@@ -57,7 +57,7 @@ class FridgesFragment : Fragment() {
 
         //dummy values
         addFridge(Fridge())
-        addWine(getFridge("New fridge"), Wine())
+        addWine(getFridge("New fridge"), Wine(name="steadfast"))
         return root
     }
 
@@ -145,9 +145,13 @@ class FridgesFragment : Fragment() {
         var columns: Int = 1,
         var rps: Int = 1,
         var depth: Int = 1,
-        var capacity: Int = sections * columns * rps * depth,
-        var wines: MutableList<Wine> = mutableListOf() //TODO create default full list
+        var capacity: Int = sections * rps * columns * depth,
+        var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf()
     )
+
+    private fun initWineArray(sections: Int, rps: Int, columns: Int, depth: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
+        return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
+    }
 
     fun getFridge(name: String): Fridge {
         for (f in fridges) {
@@ -162,6 +166,7 @@ class FridgesFragment : Fragment() {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
         fridges.add(fridge)
+        fridge.wines = initWineArray(fridge.sections, fridge.rps, fridge.columns, fridge.depth)
         fridgeAdapter.notifyDataSetChanged()
     }
 
@@ -178,8 +183,24 @@ class FridgesFragment : Fragment() {
         fridge.rps = newFridge.rps
         fridge.depth = newFridge.depth
         fridge.capacity = newFridge.capacity
+        resizeWinesArray(fridge, newFridge.depth, newFridge.sections, newFridge.rps, newFridge.columns)
         fridgeAdapter.notifyDataSetChanged()
     }
+
+    fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
+        val oldWines = fridge.wines
+
+        val newWines = MutableList(newDepth) { layer -> MutableList(newSections) { section -> MutableList(newRows) { row -> MutableList(newColumns) { column ->
+            if (layer < oldWines.size &&
+                section < oldWines[layer].size &&
+                row < oldWines[layer][section].size &&
+                column < oldWines[layer][section][row].size)
+            { oldWines[layer][section][row][column] } else { Wine() }
+        } } } }
+
+        fridge.wines = newWines
+    }
+
 
     fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
         val nameEditText = dialogView.findViewById<EditText>(R.id.nameEditText)
@@ -218,24 +239,33 @@ class FridgesFragment : Fragment() {
 
     //Wine class
     data class Wine(
-        val name: String = "null",
-        val price: Int = 10,
-        val year: Int = 2000,
-        val type: String = "Red",
-        val vineyard: String = "Vineyard",
-        val region: String = "Bordeaux",
-        val grapeVariety: String = "Cabernet Sauvignon",
-        val rating: Double = 4.5,
+        var name: String = "null",
+        var price: Int = 10,
+        var year: Int = 2000,
+        var type: String = "Red",
+        var vineyard: String = "Vineyard",
+        var region: String = "Bordeaux",
+        var grapeVariety: String = "Cabernet Sauvignon",
+        var rating: Double = 4.5,
         val tastingNotes: String = "Fruity with hints of oak and vanilla",
-        val drinkBy: Int = 2050,
-        val image: String? = null
+        var drinkBy: Int = 2050,
+        var description: String = "desc",
+        val imagePath: String = "null"
     )
 
-    fun addWine(fridge: Fridge, wine: Wine) {
-        if (fridge.wines.contains(wine)) { return }
-        fridge.wines.add(wine)
+    fun addWine(fridge: Fridge, wine: Wine, layer: Int = 0, section: Int = 0, row: Int = 0, column: Int = 0) {
+        if (fridge.wines[layer][section][row][column].name != "null") return
+
+        for (l in 0 until fridge.wines.size) {
+            for (s in 0 until fridge.wines[l].size) {
+                for (r in 0 until fridge.wines[l][s].size) {
+                    for (c in 0 until fridge.wines[l][s][r].size) {
+                        if (fridge.wines[l][s][r][c].name == wine.name) return } } } }
+
+        fridge.wines[layer][section][row][column] = wine
         fridgeAdapter.notifyDataSetChanged()
     }
+
 
     //adapter
     class FridgeAdapter(
@@ -260,7 +290,18 @@ class FridgesFragment : Fragment() {
             val fridge = fridges[i]
             holder.fridgeImageView.setImageResource(fridge.icon)
             holder.fridgeNameTextView.text = fridge.name
-            holder.fridgeWineCountTextView.text = "Wines: ${fridge.wines.size}/${fridge.capacity}"
+
+            // Correctly count total wine slots
+            val totalWines = fridge.depth * fridge.sections * fridge.rps * fridge.columns
+            val filledSlots = fridge.wines.sumOf { layer ->
+                layer.sumOf { section ->
+                    section.sumOf { row ->
+                        row.count { it.name != "null" }
+                    }
+                }
+            }
+
+            holder.fridgeWineCountTextView.text = "Wines: $filledSlots/$totalWines"
 
             holder.itemView.setOnClickListener { onFridgeClick(fridge) }
 
@@ -272,4 +313,5 @@ class FridgesFragment : Fragment() {
 
         override fun getItemCount(): Int = fridges.size
     }
+
 }

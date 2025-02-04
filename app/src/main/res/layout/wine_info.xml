@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:lineSpacingExtra="8dp"
-        android:text="[year]\n[vineyard, region, country]\nVariety: [variety]\nRating: [rating]\nBought at: [price]\nDrink by: [drinkBy]\n[description]"
+        android:text="[year]\n[vineyard, region]\nVariety: [variety]\nRating: [rating]\nBought at: [price]\nDrink by: [drinkBy]\n[description]"
         android:textColor="?attr/colorOnSurface"
         android:textSize="16sp" />
 

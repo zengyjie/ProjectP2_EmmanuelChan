@@ -3,4 +3,12 @@
     <string name="title_home">My Fridges</string>
     <string name="title_dashboard">All Wines</string>
     <string name="title_settings">Settings</string>
+
+    <string-array name="wine_types">
+        <item>Red</item>
+        <item>White</item>
+        <item>Chinese</item>
+        <item>Sake</item>
+        <item>Whisky</item>
+    </string-array>
 </resources>

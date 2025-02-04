@@ -1,5 +1,8 @@
 package com.example.projectp2_emmanuelchan.ui.wines
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,15 +10,11 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.FridgeActivity
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
-import com.example.projectp2_emmanuelchan.ui.custom.CustomSpinner
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 
 class WinesFragment : Fragment() {
@@ -55,17 +54,19 @@ class WinesFragment : Fragment() {
             .setView(dialogView)
         val dialog = dialogBuilder.create()
 
-        dialogView.findViewById<Button>(R.id.editWineButton).setOnClickListener { editWine(wine) }
+        dialogView.findViewById<Button>(R.id.editWineButton).setOnClickListener { editWine(requireContext(), wine) }
         dialog.show()
     }
 
-    fun editWine(wine: FridgesFragment.Wine) {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.wine_edit, null)
-        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-        val dialog = dialogBuilder.create()
+    companion object {
+        fun editWine(context: Context, wine: FridgesFragment.Wine) {
+            val dialogView = LayoutInflater.from(context).inflate(R.layout.wine_edit, null)
+            val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
+                .setView(dialogView)
+            val dialog = dialogBuilder.create()
 
-        dialog.show()
+            dialog.show()
+        }
     }
 
     //adapter
@@ -74,10 +75,12 @@ class WinesFragment : Fragment() {
         private val onWineClick: (FridgesFragment.Wine) -> Unit,
     ) : RecyclerView.Adapter<AllWinesAdapter.AllWinesViewHolder>() {
 
+        override fun getItemCount(): Int = wines.size
+
         class AllWinesViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val fridgeImageView: ImageView = view.findViewById(R.id.wineImageView)
-            val fridgeNameTextView: TextView = view.findViewById(R.id.wineNameTextView)
-            val fridgeWineCountTextView: TextView = view.findViewById(R.id.wineDescTextView)
+            val wineImageView: ImageView = view.findViewById(R.id.wineImageView)
+            val wineNameTextView: TextView = view.findViewById(R.id.wineNameTextView)
+            val wineDescTextView: TextView = view.findViewById(R.id.wineDescTextView)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AllWinesViewHolder {
@@ -87,9 +90,16 @@ class WinesFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: AllWinesViewHolder, i: Int) {
-            holder.itemView.setOnClickListener { onWineClick(wines[i]) }
+            val tempWine = wines[i]
+            if (tempWine.imagePath != "null") { holder.wineImageView.setImageBitmap(loadImage(wines[i].imagePath)) }
+            holder.wineNameTextView.text = tempWine.name
+            holder.wineDescTextView.text = "${tempWine.year}, ${tempWine.vineyard}"
+            holder.itemView.setOnClickListener { onWineClick(tempWine) }
         }
 
-        override fun getItemCount(): Int = wines.size
+        private fun loadImage(path: String): Bitmap? {
+            try { return BitmapFactory.decodeFile(path) } catch (e: Exception) { e.printStackTrace() }
+            return null
+        }
     }
 }
