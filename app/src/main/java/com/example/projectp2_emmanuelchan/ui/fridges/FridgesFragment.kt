@@ -76,7 +76,7 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val fridge = readFridgeData(dialogView)
-            if (!fridge.name.startsWith("InvalidName")) { addFridge(fridge) } else { return@setOnClickListener}
+            if (!fridge.name.startsWith("InvalidName")) { addFridge(fridge) } else { return@setOnClickListener }
             dialog.dismiss()
         }
         dialog.show()
@@ -166,7 +166,7 @@ class FridgesFragment : Fragment() {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
         fridges.add(fridge)
-        fridge.wines = initWineArray(fridge.sections, fridge.rps, fridge.columns, fridge.depth)
+        fridge.wines = initWineArray(fridge.depth, fridge.sections, fridge.rps, fridge.columns)
         fridgeAdapter.notifyDataSetChanged()
     }
 
