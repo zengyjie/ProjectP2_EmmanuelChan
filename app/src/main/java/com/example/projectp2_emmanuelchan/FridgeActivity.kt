@@ -30,7 +30,6 @@ import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
-import kotlin.properties.Delegates
 
 class FridgeActivity : AppCompatActivity() {
 
@@ -129,18 +128,24 @@ class FridgeActivity : AppCompatActivity() {
                 region = dialogView.findViewById<TextInputEditText>(R.id.editRegion)?.text.toString()
                 grapeVariety = dialogView.findViewById<TextInputEditText>(R.id.editVariety)?.text.toString()
                 rating = dialogView.findViewById<TextInputEditText>(R.id.editRating)?.text.toString().toDoubleOrNull() ?: 0.0
-                price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text.toString().toInt()
-                drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text.toString().toInt()
+                price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text.toString().toIntOrNull() ?: 0
+                drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text.toString().toIntOrNull() ?: 0
                 description = dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.text.toString()
             }
 
             val fridge = FridgesFragment.selectedFridge
             val indices = getIndicesFromPosition(index, fridge)
             val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
+
+            // Ensure the structure exists before assigning
+            while (fridge.wines[selectedLayer].size <= indices[0]) fridge.wines[selectedLayer].add(mutableListOf())
+            while (fridge.wines[selectedLayer][indices[0]].size <= indices[1]) fridge.wines[selectedLayer][indices[0]].add(mutableListOf())
+            while (fridge.wines[selectedLayer][indices[0]][indices[1]].size <= indices[2]) fridge.wines[selectedLayer][indices[0]][indices[1]].add(FridgesFragment.Wine())
+
             fridge.wines[selectedLayer][indices[0]][indices[1]][indices[2]] = tempWine
 
             dialog.dismiss()
-            wineRecyclerView.adapter?.notifyDataSetChanged()
+            wineRecyclerView.adapter?.notifyItemChanged(index)
         }
 
         dialog.show()
@@ -155,7 +160,7 @@ class FridgeActivity : AppCompatActivity() {
         dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = wine.name
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
-                    "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\n${wine.description}"
+                    "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
             WinesFragment.editWine(this, wine, cameraLauncher, capturedImage)
