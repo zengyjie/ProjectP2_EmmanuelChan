@@ -12,7 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity
@@ -29,6 +28,15 @@ class FridgesFragment : Fragment() {
     companion object {
         var fridges = mutableListOf<Fridge>()
         var selectedFridge: Fridge = Fridge()
+
+        fun getFridge(name: String): Fridge {
+            for (f in fridges) {
+                if (f.name.equals(name)) {
+                    return f
+                }
+            }
+            return Fridge(name="null")
+        }
     }
 
     private lateinit var fridgeAdapter: FridgeAdapter
@@ -38,9 +46,6 @@ class FridgesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val fridgesViewModel =
-            ViewModelProvider(this).get(FridgesViewModel::class.java)
-
         _binding = FragmentFridgesBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -153,15 +158,6 @@ class FridgesFragment : Fragment() {
         return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
     }
 
-    fun getFridge(name: String): Fridge {
-        for (f in fridges) {
-            if (f.name.equals(name)) {
-                return f
-            }
-        }
-        return Fridge(name="null")
-    }
-
     fun addFridge(fridge: Fridge) {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
@@ -250,7 +246,8 @@ class FridgesFragment : Fragment() {
         val tastingNotes: String = "Fruity with hints of oak and vanilla",
         var drinkBy: Int = 2050,
         var description: String = "desc",
-        val imagePath: String = "null"
+        val imagePath: String = "null",
+        var parentFridge: String = "New Fridge"
     )
 
     fun addWine(fridge: Fridge, wine: Wine, layer: Int = 0, section: Int = 0, row: Int = 0, column: Int = 0) {
@@ -265,7 +262,6 @@ class FridgesFragment : Fragment() {
         fridge.wines[layer][section][row][column] = wine
         fridgeAdapter.notifyDataSetChanged()
     }
-
 
     //adapter
     class FridgeAdapter(

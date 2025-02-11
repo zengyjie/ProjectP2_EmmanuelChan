@@ -22,7 +22,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.getIndicesFromPosition
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
@@ -83,6 +82,17 @@ class WinesFragment : Fragment() {
     }
 
     companion object {
+        fun findWine(fridge: FridgesFragment.Fridge, targetWine: FridgesFragment.Wine) : List<Int>? {
+            for (l in fridge.wines.indices) {
+                for (s in fridge.wines[l].indices) {
+                    for (r in fridge.wines[l][s].indices) {
+                        for (c in fridge.wines[l][s][r].indices) {
+                            if (fridge.wines[l][s][r][c] == targetWine) {
+                                return listOf(l, s, r, c) } } } } }
+
+            return null
+        }
+
         fun editWine(context: Context, wine: FridgesFragment.Wine, cameraLauncher: ActivityResultLauncher<Intent>, capturedImage: Bitmap?) {
             val dialogView = LayoutInflater.from(context).inflate(R.layout.wine_edit, null)
             val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
@@ -95,7 +105,7 @@ class WinesFragment : Fragment() {
             val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
             val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, wineTypes)
             wineTypeSpinner.adapter = spinnerAdapter
-            wineTypeSpinner.setSelection(wineTypes.indexOf(wine.type)) // Select correct type
+            wineTypeSpinner.setSelection(wineTypes.indexOf(wine.type))
 
             val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
             if (wine.imagePath.isNotEmpty()) {
@@ -107,7 +117,6 @@ class WinesFragment : Fragment() {
                 val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 cameraLauncher.launch(cameraIntent)
             }
-
             capturedImage?.let {
                 wineImageView.setImageBitmap(it)
             }
@@ -122,7 +131,30 @@ class WinesFragment : Fragment() {
             dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.setText(wine.drinkBy.toString())
             dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.setText(wine.description)
 
-            dialogView.findViewById<Button>(R.id.saveButton)?.setOnClickListener {
+            val deleteBtn = dialogView.findViewById<Button>(R.id.deleteWineButton)//todo//todo
+            deleteBtn.visibility = View.VISIBLE
+            deleteBtn.setOnClickListener {
+                val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+                val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setView(confirmDeleteView)
+                val deleteDialog = confirmDialogBuilder.create()
+
+                confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${wine.name}?"
+
+                confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                    findWine(FridgesFragment.getFridge(wine.parentFridge), wine)//change
+                    deleteDialog.dismiss()
+                    dialog.dismiss()
+                }
+
+                confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                    deleteDialog.dismiss()
+                }
+
+                deleteDialog.show()
+            }
+
+            dialogView.findViewById<Button>(R.id.saveWineButton)?.setOnClickListener {
                 wine.name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text.toString()
                 wine.type = wineTypeSpinner.selectedItem.toString()
                 wine.year = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.text.toString().toIntOrNull() ?: 0

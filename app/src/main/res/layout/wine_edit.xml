@@ -218,13 +218,25 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/saveButton"
+            android:id="@+id/saveWineButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="[Add/Save]"
-            android:textAllCaps="false"
+            android:textAllCaps="true"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp"
+            app:backgroundTint="?android:attr/colorBackground"
+            app:cornerRadius="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteWineButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            android:visibility="gone"
             app:backgroundTint="?android:attr/colorBackground"
             app:cornerRadius="4dp" />
     </LinearLayout>

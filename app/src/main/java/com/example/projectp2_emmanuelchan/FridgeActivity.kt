@@ -37,6 +37,7 @@ class FridgeActivity : AppCompatActivity() {
     private lateinit var wineRecyclerView: RecyclerView
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private var capturedImage: Bitmap? = null
+    private lateinit var permissionLauncher: ActivityResultLauncher<String>
 
     companion object {
         fun start(context: Context) {
@@ -114,12 +115,19 @@ class FridgeActivity : AppCompatActivity() {
 
         val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(cameraIntent)
+            permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    cameraLauncher.launch(cameraIntent)
+                } else {
+                    Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
         capturedImage?.let { wineImageView.setImageBitmap(it) }
+        //todo label
 
-        dialogView.findViewById<Button>(R.id.saveButton)?.setOnClickListener {
+        dialogView.findViewById<Button>(R.id.saveWineButton)?.setOnClickListener {
             val tempWine = FridgesFragment.Wine().apply {
                 name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text.toString()
                 type = wineTypeSpinner.selectedItem.toString()
@@ -131,13 +139,13 @@ class FridgeActivity : AppCompatActivity() {
                 price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text.toString().toIntOrNull() ?: 0
                 drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text.toString().toIntOrNull() ?: 0
                 description = dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.text.toString()
+                parentFridge = FridgesFragment.selectedFridge.name
             }
 
             val fridge = FridgesFragment.selectedFridge
             val indices = getIndicesFromPosition(index, fridge)
             val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
 
-            // Ensure the structure exists before assigning
             while (fridge.wines[selectedLayer].size <= indices[0]) fridge.wines[selectedLayer].add(mutableListOf())
             while (fridge.wines[selectedLayer][indices[0]].size <= indices[1]) fridge.wines[selectedLayer][indices[0]].add(mutableListOf())
             while (fridge.wines[selectedLayer][indices[0]][indices[1]].size <= indices[2]) fridge.wines[selectedLayer][indices[0]][indices[1]].add(FridgesFragment.Wine())
@@ -161,9 +169,14 @@ class FridgeActivity : AppCompatActivity() {
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
                     "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
+
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
             WinesFragment.editWine(this, wine, cameraLauncher, capturedImage)
+        }
+
+        dialogView.findViewById<Button>(R.id.moveWineButton).setOnClickListener {
+            //todo
         }
 
         dialog.show()

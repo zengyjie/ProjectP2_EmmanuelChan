@@ -44,23 +44,22 @@
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:text="Edit"
-        android:textAllCaps="false"
+        android:textAllCaps="true"
         android:textColor="?attr/colorOnPrimary"
-        android:textSize="16sp"
-        app:backgroundTint="?attr/colorPrimary"
+        android:textSize="14sp"
+        app:backgroundTint="?android:attr/colorBackground"
         app:cornerRadius="4dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/moveWineButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:text="Move"
-        android:textAllCaps="false"
+        android:textAllCaps="true"
         android:textColor="?attr/colorOnPrimary"
-        android:textSize="16sp"
-        app:backgroundTint="?attr/colorPrimary"
+        android:textSize="14sp"
+        app:backgroundTint="?android:attr/colorBackground"
         app:cornerRadius="4dp" />
 </LinearLayout>
