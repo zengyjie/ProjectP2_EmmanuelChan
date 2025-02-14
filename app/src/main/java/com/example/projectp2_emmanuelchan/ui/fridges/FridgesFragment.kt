@@ -154,7 +154,7 @@ class FridgesFragment : Fragment() {
         var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf()
     )
 
-    private fun initWineArray(sections: Int, rps: Int, columns: Int, depth: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
+    private fun initWineArray(depth: Int, sections: Int, rps: Int, columns: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
         return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
     }
 
@@ -218,10 +218,10 @@ class FridgesFragment : Fragment() {
         }
 
         var icon: Int = R.drawable.default_fridge
-        var depth: Int
         if (dialogView.findViewById<RadioButton>(R.id.fridge1RadioButton)!!.isSelected) { icon = R.drawable.fridge_1 }
         if (dialogView.findViewById<RadioButton>(R.id.fridge2RadioButton)!!.isSelected) { icon = R.drawable.fridge_2 }
-        if (dialogView.findViewById<ToggleButton>(R.id.depthToggleButton).isChecked) { depth = 2 } else { depth = 1 }
+        val depthToggle = dialogView.findViewById<ToggleButton>(R.id.depthToggleButton)
+        val depth = if (depthToggle?.isChecked == true) 2 else 1
 
         return Fridge(
             name = name,
@@ -243,11 +243,12 @@ class FridgesFragment : Fragment() {
         var region: String = "Bordeaux",
         var grapeVariety: String = "Cabernet Sauvignon",
         var rating: Double = 4.5,
-        val tastingNotes: String = "Fruity with hints of oak and vanilla",
+        var tastingNotes: String = "Fruity with hints of oak and vanilla",
         var drinkBy: Int = 2050,
         var description: String = "desc",
-        val imagePath: String = "null",
-        var parentFridge: String = "New Fridge"
+        var imagePath: String = "null",
+        var parentFridge: String = "New Fridge",
+        var drunk: Boolean = false
     )
 
     fun addWine(fridge: Fridge, wine: Wine, layer: Int = 0, section: Int = 0, row: Int = 0, column: Int = 0) {

@@ -90,7 +90,7 @@ class WinesFragment : Fragment() {
                             if (fridge.wines[l][s][r][c] == targetWine) {
                                 return listOf(l, s, r, c) } } } } }
 
-            return null
+            return mutableListOf(0,0,0,0)
         }
 
         fun editWine(context: Context, wine: FridgesFragment.Wine, cameraLauncher: ActivityResultLauncher<Intent>, capturedImage: Bitmap?) {
@@ -131,7 +131,7 @@ class WinesFragment : Fragment() {
             dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.setText(wine.drinkBy.toString())
             dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.setText(wine.description)
 
-            val deleteBtn = dialogView.findViewById<Button>(R.id.deleteWineButton)//todo//todo
+            val deleteBtn = dialogView.findViewById<Button>(R.id.deleteWineButton)
             deleteBtn.visibility = View.VISIBLE
             deleteBtn.setOnClickListener {
                 val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
@@ -139,12 +139,14 @@ class WinesFragment : Fragment() {
                     .setView(confirmDeleteView)
                 val deleteDialog = confirmDialogBuilder.create()
 
-                confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${wine.name}?"
+                val wineName = wine.name
+                confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${wineName}?"
 
                 confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
-                    findWine(FridgesFragment.getFridge(wine.parentFridge), wine)//change
+                    wine.name = "null"
                     deleteDialog.dismiss()
                     dialog.dismiss()
+                    Toast.makeText(context, "${wineName} deleted", Toast.LENGTH_SHORT).show()
                 }
 
                 confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
@@ -154,7 +156,9 @@ class WinesFragment : Fragment() {
                 deleteDialog.show()
             }
 
-            dialogView.findViewById<Button>(R.id.saveWineButton)?.setOnClickListener {
+            val saveBtn = dialogView.findViewById<Button>(R.id.saveWineButton)
+            saveBtn.text = "Save"
+            saveBtn.setOnClickListener {
                 wine.name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text.toString()
                 wine.type = wineTypeSpinner.selectedItem.toString()
                 wine.year = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.text.toString().toIntOrNull() ?: 0

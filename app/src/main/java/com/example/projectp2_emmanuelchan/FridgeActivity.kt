@@ -8,14 +8,12 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
@@ -37,9 +35,11 @@ class FridgeActivity : AppCompatActivity() {
     private lateinit var wineRecyclerView: RecyclerView
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private var capturedImage: Bitmap? = null
-    private lateinit var permissionLauncher: ActivityResultLauncher<String>
 
     companion object {
+        private var moving = false
+        private var selectedWine = FridgesFragment.Wine()
+
         fun start(context: Context) {
             val intent = Intent(context, FridgeActivity::class.java)
             context.startActivity(intent)
@@ -76,7 +76,7 @@ class FridgeActivity : AppCompatActivity() {
         title = fridge.name
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        wineRecyclerView = findViewById<RecyclerView>(R.id.wineRecyclerView)
+        wineRecyclerView = findViewById(R.id.wineRecyclerView)
         val layoutManager = GridLayoutManager(this, fridge.columns)
         wineRecyclerView.layoutManager = layoutManager
         val wineAdapter = WineAdapter(fridge, 0)
@@ -102,8 +102,7 @@ class FridgeActivity : AppCompatActivity() {
 
     private fun showAddWinePopup(index: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_edit, null)
-        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(dialogView)
+        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this).setView(dialogView)
         val dialog = dialogBuilder.create()
 
         dialogView.findViewById<MaterialTextView>(R.id.editTitleTextView)?.text = "Add Wine"
@@ -113,32 +112,67 @@ class FridgeActivity : AppCompatActivity() {
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, wineTypes)
         wineTypeSpinner.adapter = spinnerAdapter
 
-        val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
-        dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-            permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                    cameraLauncher.launch(cameraIntent)
-                } else {
-                    Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        capturedImage?.let { wineImageView.setImageBitmap(it) }
-        //todo label
+        val wineNameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
+        val wineYearInput = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)
+        val vineyardInput = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)
+        val regionInput = dialogView.findViewById<TextInputEditText>(R.id.editRegion)
+        val varietyInput = dialogView.findViewById<TextInputEditText>(R.id.editVariety)
+        val ratingInput = dialogView.findViewById<TextInputEditText>(R.id.editRating)
+        val priceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
+        val drinkByInput = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)
+        val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
 
-        dialogView.findViewById<Button>(R.id.saveWineButton)?.setOnClickListener {
+        val saveButton = dialogView.findViewById<Button>(R.id.saveWineButton)
+        saveButton.setOnClickListener {
+            var isValid = true
+
+            fun validateField(input: TextInputEditText, errorMessage: String): Boolean {
+                if (input.text.isNullOrBlank()) {
+                    input.error = errorMessage
+                    return false
+                }
+                return true
+            }
+
+            fun validateNumberField(input: TextInputEditText, errorMessage: String, min: Int = Int.MIN_VALUE, max: Int = Int.MAX_VALUE): Int? {
+                val value = input.text.toString().toIntOrNull()
+                return if (value == null || value < min || value > max) {
+                    input.error = errorMessage
+                    null
+                } else value
+            }
+
+            fun validateDoubleField(input: TextInputEditText, errorMessage: String, min: Double = 0.0, max: Double = 5.0): Double? {
+                val value = input.text.toString().toDoubleOrNull()
+                return if (value == null || value < min || value > max) {
+                    input.error = errorMessage
+                    null
+                } else value
+            }
+
+            isValid = validateField(wineNameInput, "Name is required") && isValid
+            isValid = validateField(vineyardInput, "Vineyard is required") && isValid
+            isValid = validateField(regionInput, "Region is required") && isValid
+            isValid = validateField(varietyInput, "Variety is required") && isValid
+
+            var year = validateNumberField(wineYearInput, "Invalid year", 1000, 2100) ?: run { isValid = false; 0 }
+            var rating = validateDoubleField(ratingInput, "Rating must be between 0 and 5", 0.0, 5.0) ?: run { isValid = false; 0.0 }
+            var price = validateNumberField(priceInput, "Invalid price", 0) ?: run { isValid = false; 0 }
+            var drinkBy = validateNumberField(drinkByInput, "Invalid drink-by year", 1000, 2100) ?: run { isValid = false; 0 }
+
+            if (!isValid) return@setOnClickListener
+
             val tempWine = FridgesFragment.Wine().apply {
-                name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text.toString()
+                name = wineNameInput.text.toString()
                 type = wineTypeSpinner.selectedItem.toString()
-                year = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.text.toString().toIntOrNull() ?: 0
-                vineyard = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)?.text.toString()
-                region = dialogView.findViewById<TextInputEditText>(R.id.editRegion)?.text.toString()
-                grapeVariety = dialogView.findViewById<TextInputEditText>(R.id.editVariety)?.text.toString()
-                rating = dialogView.findViewById<TextInputEditText>(R.id.editRating)?.text.toString().toDoubleOrNull() ?: 0.0
-                price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text.toString().toIntOrNull() ?: 0
-                drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text.toString().toIntOrNull() ?: 0
-                description = dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.text.toString()
+                year = year
+                vineyard = vineyardInput.text.toString()
+                region = regionInput.text.toString()
+                grapeVariety = varietyInput.text.toString()
+                rating = rating
+                price = price
+                drinkBy = drinkBy
+                description = descriptionInput.text.toString()
                 parentFridge = FridgesFragment.selectedFridge.name
             }
 
@@ -159,6 +193,7 @@ class FridgeActivity : AppCompatActivity() {
         dialog.show()
     }
 
+
     private fun openWine(wine: FridgesFragment.Wine) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_info, null)
         val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
@@ -168,15 +203,21 @@ class FridgeActivity : AppCompatActivity() {
         dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = wine.name
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
-                    "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
+            "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
             WinesFragment.editWine(this, wine, cameraLauncher, capturedImage)
+            wineRecyclerView.adapter?.notifyDataSetChanged()
         }
 
         dialogView.findViewById<Button>(R.id.moveWineButton).setOnClickListener {
-            //todo
+            moving = true
+            selectedWine = wine
+            val movingTextView = binding.movingTextView
+            movingTextView.text = "Moving \"${wine.name}\""
+            movingTextView.visibility = View.VISIBLE
+            dialog.dismiss()
         }
 
         dialog.show()
@@ -210,15 +251,12 @@ class FridgeActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: WineViewHolder, position: Int) {
             val indices = getIndicesFromPosition(position, fridge)
-            System.out.println(indices.toString())
-            val wine = fridge.wines[selectedLayer][indices[0]][indices[1]][indices[2]]
+            var wine = fridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]]
             holder.bind(wine)
             holder.itemView.setOnClickListener {
-                if (wine.name == "null") {
-                    (holder.itemView.context as? FridgeActivity)?.showAddWinePopup(position)
-                } else {
-                    (holder.itemView.context as? FridgeActivity)?.openWine(wine)
-                }
+                if (wine.name == "null") { (holder.itemView.context as? FridgeActivity)?.showAddWinePopup(position) }
+                else if (moving) { wine = selectedWine }
+                else { (holder.itemView.context as? FridgeActivity)?.openWine(wine) }
             }
         }
 
