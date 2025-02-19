@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Filter"
+        android:textAlignment="center"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Price"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/minPriceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
+            android:text="Min"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="0dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textSize="18sp"
+            android:textColor="?attr/colorOnSurface"
+            android:paddingHorizontal="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/maxPriceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
+            android:text="Max"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="0dp" />
+
+        <CheckBox
+            android:id="@+id/priceCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Type"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/wineTypeSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:background="?android:attr/colorBackground"
+            android:entries="@array/wine_types" />
+
+        <CheckBox
+            android:id="@+id/typeCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Year"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/yearTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="[year]"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <ImageButton
+            android:id="@+id/yearPickerButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:backgroundTint="?android:attr/colorBackground"
+            app:srcCompat="@drawable/ic_calendar" />
+
+        <CheckBox
+            android:id="@+id/yearCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Vineyard"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/vineyardEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:background="?android:attr/colorBackground"
+            android:hint="Enter Vineyard"
+            android:padding="8dp"
+            android:textColor="?attr/colorOnSurface" />
+
+        <CheckBox
+            android:id="@+id/vineyardCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Rating"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/minRatingButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
+            android:text="Min"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="0dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp"
+            android:text="-"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/maxRatingButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
+            android:text="Max"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="0dp" />
+
+        <CheckBox
+            android:id="@+id/ratingCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/applyFilterButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:background="#00FFFFFF"
+        android:elevation="0dp"
+        android:text="Apply"
+        android:textAllCaps="true"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="14sp"
+        app:backgroundTint="#00FFFFFF"
+        app:cornerRadius="0dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/clearFiltersButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#00FFFFFF"
+        android:elevation="0dp"
+        android:text="Clear"
+        android:textAllCaps="true"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="14sp"
+        app:backgroundTint="#00FFFFFF"
+        app:cornerRadius="0dp" />
+
+</LinearLayout>

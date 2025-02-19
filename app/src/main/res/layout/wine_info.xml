@@ -41,25 +41,27 @@
         android:id="@+id/editWineButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#00FFFFFF"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:text="Edit"
         android:textAllCaps="true"
         android:textColor="?attr/colorOnPrimary"
         android:textSize="14sp"
-        app:backgroundTint="?android:attr/colorBackground"
+        app:backgroundTint="#00FFFFFF"
         app:cornerRadius="4dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/moveWineButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#00FFFFFF"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:text="Move"
         android:textAllCaps="true"
         android:textColor="?attr/colorOnPrimary"
         android:textSize="14sp"
-        app:backgroundTint="?android:attr/colorBackground"
+        app:backgroundTint="#00FFFFFF"
         app:cornerRadius="4dp" />
 </LinearLayout>
