@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -23,8 +24,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.moving
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedIndices
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeRecyclerView
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.highlightedWine
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
@@ -39,10 +44,10 @@ class FridgeActivity : AppCompatActivity() {
     private var capturedImage: Bitmap? = null
 
     companion object {
-        private var moving = false
-        private var selectedWine = FridgesFragment.Wine()
-        private var selectedIndices = mutableListOf(0, 0, 0, 0)
         private lateinit var movingTextView: TextView
+        private lateinit var cancelMoveButton: Button
+        private lateinit var changeFridgeButton: Button
+        private lateinit var movingButtonsLayout: LinearLayout
 
         fun getIndicesFromPosition(position: Int, fridge: FridgesFragment.Fridge): MutableList<Int> {
             val perLayer = fridge.sections * fridge.rps * fridge.columns
@@ -71,6 +76,14 @@ class FridgeActivity : AppCompatActivity() {
         binding = ActivityFridgeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         movingTextView = binding.movingTextView
+        cancelMoveButton = binding.cancelMoveButton
+        changeFridgeButton = binding.changeFridgeButton
+        movingButtonsLayout = binding.movingButtonsLayout
+        if (moving) {
+            movingTextView.text = "Moving \"${selectedWine.name}\""
+            movingButtonsLayout.visibility = View.VISIBLE
+            cancelMoveButton.visibility = View.VISIBLE
+        }
 
         val fridge = selectedFridge
         title = fridge.name
@@ -90,6 +103,14 @@ class FridgeActivity : AppCompatActivity() {
             wineRecyclerView.adapter = newAdapter
         }
         if (intent.getIntExtra("itemLayer", 3) == 1) { depthToggleButton.isChecked = true }
+
+        cancelMoveButton.setOnClickListener{
+            moving = false
+            movingTextView.visibility = View.GONE
+            cancelMoveButton.visibility = View.GONE
+            changeFridgeButton.visibility = View.GONE
+            movingButtonsLayout.visibility = View.GONE
+        }
 
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -216,13 +237,14 @@ class FridgeActivity : AppCompatActivity() {
             selectedIndices = getIndicesFromPosition(position, selectedFridge)
             movingTextView.text = "Moving \"${wine.name}\""
             movingTextView.visibility = View.VISIBLE
+            cancelMoveButton.visibility = View.VISIBLE
             dialog.dismiss()
         }
 
         dialog.show()
     }
 
-    private fun moveWine(position: Int) { //TODO move to other fridges
+    private fun moveWine(position: Int) {
         val indices = getIndicesFromPosition(position, selectedFridge)
         val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
         selectedFridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine(
@@ -244,7 +266,15 @@ class FridgeActivity : AppCompatActivity() {
         selectedWine = FridgesFragment.Wine()
         selectedFridge.wines [selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
         movingTextView.visibility = View.GONE
+        cancelMoveButton.visibility = View.GONE
+        changeFridgeButton.visibility = View.GONE
+        movingButtonsLayout.visibility = View.GONE
         moving = false
+        wineRecyclerView.adapter?.notifyDataSetChanged()
+    }
+
+    override fun onResume() {
+        super.onResume()
         wineRecyclerView.adapter?.notifyDataSetChanged()
     }
 
@@ -252,6 +282,10 @@ class FridgeActivity : AppCompatActivity() {
         return when (item.itemId) {
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
+                if (moving) {
+                    moving = false
+                    Toast.makeText(this, "Cancelled move.", Toast.LENGTH_SHORT).show()
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)

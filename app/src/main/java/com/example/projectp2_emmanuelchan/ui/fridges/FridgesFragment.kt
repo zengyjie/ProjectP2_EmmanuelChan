@@ -31,6 +31,7 @@ class FridgesFragment : Fragment() {
         var fridges = mutableListOf<Fridge>()
         var selectedFridge: Fridge = Fridge()
         var highlightedWine: Wine = Wine()
+        lateinit var fridgeRecyclerView: RecyclerView
 
         fun getFridge(name: String): Fridge {
             for (f in fridges) {
@@ -59,7 +60,7 @@ class FridgesFragment : Fragment() {
         _binding = FragmentFridgesBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val fridgeRecyclerView = binding.fridgeRecyclerView
+        fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
         fridgeAdapter = FridgeAdapter(fridges, { fridge ->

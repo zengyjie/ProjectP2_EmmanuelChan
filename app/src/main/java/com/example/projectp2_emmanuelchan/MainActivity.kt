@@ -10,10 +10,17 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.projectp2_emmanuelchan.databinding.ActivityMainBinding
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    companion object {
+        var moving = false
+        var selectedWine = FridgesFragment.Wine()
+        var selectedIndices = mutableListOf(0, 0, 0, 0)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)

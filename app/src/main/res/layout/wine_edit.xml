@@ -223,27 +223,29 @@
             android:id="@+id/saveWineButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="0dp"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
             android:text="[Add/Save]"
             android:textAllCaps="true"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp"
-            android:elevation="0dp"
-            android:layout_marginBottom="0dp"
-            app:backgroundTint="?android:attr/colorBackground"
+            app:backgroundTint="#00FFFFFF"
             app:cornerRadius="0dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/deleteWineButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:background="#00FFFFFF"
+            android:elevation="0dp"
             android:text="Delete"
             android:textAllCaps="true"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="14sp"
-            android:elevation="0dp"
-            android:layout_marginTop="0dp"
             android:visibility="gone"
-            app:backgroundTint="?android:attr/colorBackground"
+            app:backgroundTint="#00FFFFFF"
             app:cornerRadius="0dp" />
 
     </LinearLayout>
