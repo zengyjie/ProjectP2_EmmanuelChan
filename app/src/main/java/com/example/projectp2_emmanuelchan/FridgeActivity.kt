@@ -81,6 +81,7 @@ class FridgeActivity : AppCompatActivity() {
         movingButtonsLayout = binding.movingButtonsLayout
         if (moving) {
             movingTextView.text = "Moving \"${selectedWine.name}\""
+            movingTextView.visibility = View.VISIBLE
             movingButtonsLayout.visibility = View.VISIBLE
             cancelMoveButton.visibility = View.VISIBLE
         }
@@ -238,6 +239,8 @@ class FridgeActivity : AppCompatActivity() {
             movingTextView.text = "Moving \"${wine.name}\""
             movingTextView.visibility = View.VISIBLE
             cancelMoveButton.visibility = View.VISIBLE
+            changeFridgeButton.visibility = View.VISIBLE
+            movingButtonsLayout.visibility = View.VISIBLE
             dialog.dismiss()
         }
 
