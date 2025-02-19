@@ -1,5 +1,7 @@
 package com.example.projectp2_emmanuelchan.ui.fridges
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,6 +30,7 @@ class FridgesFragment : Fragment() {
     companion object {
         var fridges = mutableListOf<Fridge>()
         var selectedFridge: Fridge = Fridge()
+        var highlightedWine: Wine = Wine()
 
         fun getFridge(name: String): Fridge {
             for (f in fridges) {
@@ -36,6 +39,13 @@ class FridgesFragment : Fragment() {
                 }
             }
             return Fridge(name="null")
+        }
+
+        fun openFridge(fridge: Fridge, context: Context, itemLayer: Int = 3) {
+            selectedFridge = fridge
+            val intent = Intent(context, FridgeActivity::class.java)
+            intent.putExtra("itemLayer", itemLayer)
+            context.startActivity(intent)
         }
     }
 
@@ -49,20 +59,20 @@ class FridgesFragment : Fragment() {
         _binding = FragmentFridgesBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        //RecyclerView
         val fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
-        fridgeAdapter = FridgeAdapter(fridges, { fridge -> openFridge(fridge) }, { fridge -> showEditFridgePopup(fridge) })
+        fridgeAdapter = FridgeAdapter(fridges, { fridge ->
+            highlightedWine = Wine()
+            openFridge(fridge, requireContext(), 3) },
+            { fridge -> showEditFridgePopup(fridge) })
         fridgeRecyclerView.adapter = fridgeAdapter
 
-        //FAB
         val floatingActionButton: FloatingActionButton = binding.root.findViewById(R.id.floatingActionButton)
         floatingActionButton.setOnClickListener { showAddFridgePopup() }
 
-        //dummy values
-        addFridge(Fridge())
-        addWine(getFridge("New fridge"), Wine(name="steadfast"))
+        addFridge(Fridge(name="test"))
+        addWine(getFridge("test"), Wine(name="steadfast", parentFridge=getFridge("test")))
         return root
     }
 
@@ -129,11 +139,6 @@ class FridgesFragment : Fragment() {
         }
 
         dialog.show()
-    }
-
-    fun openFridge(fridge: Fridge) {
-        selectedFridge = fridge
-        FridgeActivity.start(requireContext())
     }
 
     private fun toast(message: String) {

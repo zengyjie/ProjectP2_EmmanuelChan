@@ -111,7 +111,9 @@ class WinesFragment : Fragment() {
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
         moveButton.text = "locate"
         moveButton.setOnClickListener {
-            //todo locate wine
+            val parentFridge = wine.parentFridge
+            FridgesFragment.highlightedWine = wine
+            FridgesFragment.openFridge(parentFridge, requireContext(), findWine(parentFridge, wine)?.get(0) ?: 3)
         }
         dialog.show()
     }

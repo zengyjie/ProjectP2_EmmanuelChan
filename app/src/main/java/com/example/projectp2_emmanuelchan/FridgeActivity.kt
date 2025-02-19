@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.highlightedWine
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
 import com.google.android.material.textfield.TextInputEditText
@@ -42,11 +43,6 @@ class FridgeActivity : AppCompatActivity() {
         private var selectedWine = FridgesFragment.Wine()
         private var selectedIndices = mutableListOf(0, 0, 0, 0)
         private lateinit var movingTextView: TextView
-
-        fun start(context: Context) {
-            val intent = Intent(context, FridgeActivity::class.java)
-            context.startActivity(intent)
-        }
 
         fun getIndicesFromPosition(position: Int, fridge: FridgesFragment.Fridge): MutableList<Int> {
             val perLayer = fridge.sections * fridge.rps * fridge.columns
@@ -76,7 +72,7 @@ class FridgeActivity : AppCompatActivity() {
         setContentView(binding.root)
         movingTextView = binding.movingTextView
 
-        val fridge = FridgesFragment.selectedFridge
+        val fridge = selectedFridge
         title = fridge.name
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -87,13 +83,13 @@ class FridgeActivity : AppCompatActivity() {
         wineRecyclerView.adapter = wineAdapter
         wineRecyclerView.addItemDecoration(RowSeparatorDecoration(this, fridge.rps))
 
-        if (fridge.depth == 1) {
-            binding.depthToggleButton.isClickable = false
-        }
-        binding.depthToggleButton.setOnCheckedChangeListener { _, isChecked ->
+        val depthToggleButton = binding.depthToggleButton
+        if (fridge.depth == 1) { depthToggleButton.isClickable = false }
+        depthToggleButton.setOnCheckedChangeListener { _, isChecked ->
             val newAdapter = WineAdapter(fridge, if (isChecked) 1 else 0)
             wineRecyclerView.adapter = newAdapter
         }
+        if (intent.getIntExtra("itemLayer", 3) == 1) { depthToggleButton.isChecked = true }
 
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -226,7 +222,7 @@ class FridgeActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun moveWine(position: Int) {
+    private fun moveWine(position: Int) { //TODO move to other fridges
         val indices = getIndicesFromPosition(position, selectedFridge)
         val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
         selectedFridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine(
@@ -248,6 +244,7 @@ class FridgeActivity : AppCompatActivity() {
         selectedWine = FridgesFragment.Wine()
         selectedFridge.wines [selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
         movingTextView.visibility = View.GONE
+        moving = false
         wineRecyclerView.adapter?.notifyDataSetChanged()
     }
 
@@ -266,7 +263,6 @@ class FridgeActivity : AppCompatActivity() {
         private val fridge: FridgesFragment.Fridge,
         private val selectedLayer: Int
     ) : RecyclerView.Adapter<WineAdapter.WineViewHolder>() {
-
         override fun getItemCount(): Int {
             return fridge.sections * fridge.rps * fridge.columns
         }
@@ -279,10 +275,11 @@ class FridgeActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: WineViewHolder, position: Int) {
             val indices = getIndicesFromPosition(position, fridge)
+            System.out.println(fridge.name)
             var wine = fridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]]
             holder.bind(wine)
             holder.itemView.setOnClickListener {
-                if (moving && wine.name == "null") { (holder.itemView.context as? FridgeActivity)?.moveWine(position) }
+                if (moving && wine.name == "null") {(holder.itemView.context as? FridgeActivity)?.moveWine(position) }
                 else if (wine.name == "null") { (holder.itemView.context as? FridgeActivity)?.showAddWinePopup(position) }
                 else { (holder.itemView.context as? FridgeActivity)?.openWine(wine, position) }
             }
@@ -292,11 +289,9 @@ class FridgeActivity : AppCompatActivity() {
             private val wineImageView: ImageView = view.findViewById(R.id.wineImageView)
 
             fun bind(wine: FridgesFragment.Wine?) {
-                if (wine == null || wine.name == "null") {
-                    wineImageView.setImageResource(R.drawable.ic_add)
-                } else {
-                    wineImageView.setImageResource(R.drawable.bottle_front)
-                }
+                if (wine == null || wine.name == "null") { wineImageView.setImageResource(R.drawable.ic_add) }
+                else if (highlightedWine == wine) { wineImageView.setImageResource(R.drawable.bottle_front_highlight) }
+                else { wineImageView.setImageResource(R.drawable.bottle_front) }
             }
         }
     }
