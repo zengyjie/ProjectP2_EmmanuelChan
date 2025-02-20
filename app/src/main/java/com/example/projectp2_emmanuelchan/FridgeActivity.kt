@@ -1,6 +1,7 @@
 package com.example.projectp2_emmanuelchan
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.TypedArray
@@ -19,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -29,8 +31,8 @@ import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedIndices
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
-import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeRecyclerView
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.highlightedWine
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.origSelectedFridge
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
 import com.google.android.material.textfield.TextInputEditText
@@ -68,6 +70,15 @@ class FridgeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (moving) {
+                    moving = false
+                    Toast.makeText(this@FridgeActivity, "Cancelled move.", Toast.LENGTH_SHORT).show()
+                }
+                finish()
+            }
+        })
         val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
         when (sharedPreferences.getInt("theme", 0)) {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
@@ -195,7 +206,7 @@ class FridgeActivity : AppCompatActivity() {
                 price = price
                 drinkBy = drinkBy
                 description = descriptionInput.text.toString()
-                parentFridge = selectedFridge
+                parentFridge = selectedFridge.name
             }
 
             val fridge = selectedFridge
@@ -241,6 +252,36 @@ class FridgeActivity : AppCompatActivity() {
             cancelMoveButton.visibility = View.VISIBLE
             changeFridgeButton.visibility = View.VISIBLE
             movingButtonsLayout.visibility = View.VISIBLE
+
+            changeFridgeButton.setOnClickListener {
+                val dialogView1 = LayoutInflater.from(this).inflate(R.layout.select_fridge, null)
+                val dialogBuilder1 = AlertDialog.Builder(this).setView(dialogView1)
+                val dialog1 = dialogBuilder1.create()
+
+                val fridgeSpinner = dialogView1.findViewById<Spinner>(R.id.selectFridgeSpinner)
+                val openChangedFridgeButton = dialogView1.findViewById<Button>(R.id.openChangedFridgeButton)
+
+                val availableFridges = FridgesFragment.fridges.filter { it.name != selectedFridge.name }
+
+                val fridgeNames = availableFridges.map { it.name }
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fridgeNames)
+                fridgeSpinner.adapter = adapter
+
+                openChangedFridgeButton.setOnClickListener {
+                    val selectedFridgeName = fridgeSpinner.selectedItem?.toString()
+                    val selectedFridge = FridgesFragment.getFridge(selectedFridgeName ?: "")
+
+                    if (selectedFridge.name != "null") {
+                        FridgesFragment.openFridge(selectedFridge, this)
+                        dialog1.dismiss()
+                    } else {
+                        Toast.makeText(this, "Invalid selection", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                dialog1.show()
+            }
+
             dialog.dismiss()
         }
 
@@ -248,6 +289,7 @@ class FridgeActivity : AppCompatActivity() {
     }
 
     private fun moveWine(position: Int) {
+        System.out.println(selectedFridge)
         val indices = getIndicesFromPosition(position, selectedFridge)
         val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
         selectedFridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine(
@@ -267,7 +309,7 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.drunk
         )
         selectedWine = FridgesFragment.Wine()
-        selectedFridge.wines [selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
+        origSelectedFridge.wines [selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
         movingTextView.visibility = View.GONE
         cancelMoveButton.visibility = View.GONE
         changeFridgeButton.visibility = View.GONE
@@ -279,6 +321,15 @@ class FridgeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         wineRecyclerView.adapter?.notifyDataSetChanged()
+        movingTextView = binding.movingTextView
+        cancelMoveButton = binding.cancelMoveButton
+        changeFridgeButton = binding.changeFridgeButton
+        movingButtonsLayout = binding.movingButtonsLayout
+        if (!moving) {
+            movingTextView.visibility = View.GONE
+            movingButtonsLayout.visibility = View.GONE
+            cancelMoveButton.visibility = View.GONE
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

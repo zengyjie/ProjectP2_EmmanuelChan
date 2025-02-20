@@ -248,5 +248,9 @@
             app:backgroundTint="#00FFFFFF"
             app:cornerRadius="0dp" />
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="128dp" />
+
     </LinearLayout>
 </ScrollView>

@@ -21,6 +21,9 @@ import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentFridgesBinding
 import com.example.projectp2_emmanuelchan.ui.custom.CustomSpinner
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.io.Serializable
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class FridgesFragment : Fragment() {
 
@@ -30,6 +33,7 @@ class FridgesFragment : Fragment() {
     companion object {
         var fridges = mutableListOf<Fridge>()
         var selectedFridge: Fridge = Fridge()
+        var origSelectedFridge: Fridge = Fridge()
         var highlightedWine: Wine = Wine()
         lateinit var fridgeRecyclerView: RecyclerView
 
@@ -59,12 +63,14 @@ class FridgesFragment : Fragment() {
     ): View {
         _binding = FragmentFridgesBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        loadFridges()
 
         fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
         fridgeAdapter = FridgeAdapter(fridges, { fridge ->
             highlightedWine = Wine()
+            origSelectedFridge = fridge
             openFridge(fridge, requireContext(), 3) },
             { fridge -> showEditFridgePopup(fridge) })
         fridgeRecyclerView.adapter = fridgeAdapter
@@ -72,8 +78,6 @@ class FridgesFragment : Fragment() {
         val floatingActionButton: FloatingActionButton = binding.root.findViewById(R.id.floatingActionButton)
         floatingActionButton.setOnClickListener { showAddFridgePopup() }
 
-        addFridge(Fridge(name="test"))
-        addWine(getFridge("test"), Wine(name="steadfast", parentFridge=getFridge("test")))
         return root
     }
 
@@ -158,7 +162,7 @@ class FridgesFragment : Fragment() {
         var depth: Int = 1,
         var capacity: Int = sections * rps * columns * depth,
         var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf()
-    )
+    ) : Serializable
 
     private fun initWineArray(depth: Int, sections: Int, rps: Int, columns: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
         return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
@@ -253,7 +257,7 @@ class FridgesFragment : Fragment() {
         var drinkBy: Int = 2050,
         var description: String = "desc",
         var imagePath: String = "null",
-        var parentFridge: Fridge = Fridge(),
+        var parentFridge: String = "New Fridge",
         var drunk: Boolean = false
     )
 
@@ -317,4 +321,40 @@ class FridgesFragment : Fragment() {
         override fun getItemCount(): Int = fridges.size
     }
 
+    override fun onResume() {
+        super.onResume()
+        fridgeRecyclerView.adapter?.notifyDataSetChanged()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveFridges()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        saveFridges()
+    }
+
+    private fun saveFridges() {
+        val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        val gson = Gson()
+        val json = gson.toJson(fridges)
+
+        editor.putString("fridges_data", json)
+        editor.apply()
+    }
+
+    private fun loadFridges() {
+        val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("fridges_data", null)
+
+        if (json != null) {
+            val gson = Gson()
+            val type = object : TypeToken<MutableList<Fridge>>() {}.type
+            fridges = gson.fromJson(json, type) ?: mutableListOf()
+        }
+    }
 }

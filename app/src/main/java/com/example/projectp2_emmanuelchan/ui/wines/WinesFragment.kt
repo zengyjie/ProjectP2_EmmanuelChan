@@ -33,6 +33,7 @@ import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridges
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.getFridge
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
 
@@ -113,7 +114,7 @@ class WinesFragment : Fragment() {
         moveButton.setOnClickListener {
             val parentFridge = wine.parentFridge
             FridgesFragment.highlightedWine = wine
-            FridgesFragment.openFridge(parentFridge, requireContext(), findWine(parentFridge, wine)?.get(0) ?: 3)
+            FridgesFragment.openFridge(getFridge(parentFridge), requireContext(), findWine(getFridge(parentFridge), wine)?.get(0) ?: 3)
         }
         dialog.show()
     }

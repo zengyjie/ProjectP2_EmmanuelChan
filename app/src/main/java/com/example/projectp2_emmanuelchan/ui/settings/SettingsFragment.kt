@@ -8,12 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentSettingsBinding
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridges
+import com.google.gson.Gson
 
 class SettingsFragment : Fragment() {
 
@@ -25,9 +29,6 @@ class SettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val settingsViewModel =
-            ViewModelProvider(this).get(SettingsViewModel::class.java)
-
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -50,6 +51,30 @@ class SettingsFragment : Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+
+        binding.clearAllButton.setOnClickListener {
+            val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(confirmDeleteView)
+            val deleteDialog = confirmDialogBuilder.create()
+
+            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
+
+            confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                fridges.clear()
+                val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+                sharedPreferences.edit().remove("fridges_data").apply()
+                deleteDialog.dismiss()
+                Toast.makeText(context, "Cleared data", Toast.LENGTH_SHORT).show()
+            }
+
+            confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                deleteDialog.dismiss()
+            }
+
+            deleteDialog.show()
+        }
+
 
         return root
     }
