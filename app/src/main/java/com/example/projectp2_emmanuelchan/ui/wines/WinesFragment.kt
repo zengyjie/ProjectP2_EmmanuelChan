@@ -1,12 +1,15 @@
 package com.example.projectp2_emmanuelchan.ui.wines
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.icu.util.Calendar
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.TypedValue
@@ -25,10 +28,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
@@ -36,6 +42,9 @@ import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.f
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.getFridge
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class WinesFragment : Fragment() {
 
@@ -47,7 +56,17 @@ class WinesFragment : Fragment() {
     private var capturedImage: Bitmap? = null
     private val allWines = mutableListOf<FridgesFragment.Wine>()
     private var filter = Filter()
+    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            cameraLauncher.launch(cameraIntent)
+        } else {
+            Toast.makeText(requireContext(), "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
 
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -55,6 +74,25 @@ class WinesFragment : Fragment() {
     ): View {
         _binding = FragmentWinesBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(requireContext(), imageBitmap, fileName)
+
+                    if (savedImagePath != null) {
+                        selectedWine.imagePath = savedImagePath
+                        binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(requireContext(), "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         for (fridge in fridges) {
             for (l in fridge.wines.indices) {
@@ -79,14 +117,6 @@ class WinesFragment : Fragment() {
             filterWines(filter)
         }
 
-        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
-                capturedImage = imageBitmap
-                Toast.makeText(context, "Image captured successfully", Toast.LENGTH_SHORT).show()
-            } else { Toast.makeText(context, "Image capture failed", Toast.LENGTH_SHORT).show() }
-        }
-
         return root
     }
 
@@ -100,13 +130,14 @@ class WinesFragment : Fragment() {
         val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setView(dialogView)
         val dialog = dialogBuilder.create()
+        selectedWine = wine
         dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = wine.name
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
                     "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
 
         dialogView.findViewById<Button>(R.id.editWineButton).setOnClickListener {
-            editWine(requireContext(), wine, cameraLauncher, capturedImage)
+            editWine(requireContext(), wine, cameraLauncher, capturedImage, permissionLauncher)
         }
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
@@ -131,13 +162,53 @@ class WinesFragment : Fragment() {
             return mutableListOf(0,0,0,0)
         }
 
-        fun editWine(context: Context, wine: FridgesFragment.Wine, cameraLauncher: ActivityResultLauncher<Intent>, capturedImage: Bitmap?) {
+        fun saveImage(context: Context, bitmap: Bitmap, fileName: String): String? {
+            val directory = File(context.filesDir, "WineWise")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            val imageFile = File(directory, fileName)
+            return try {
+                FileOutputStream(imageFile).use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                }
+                imageFile.absolutePath
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
+        }
+
+        private fun loadImage(imagePath: String, imageView: ImageView) {
+            if (imagePath.isNotEmpty()) {
+                val imgFile = File(imagePath)
+                if (imgFile.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+                    imageView.setImageBitmap(bitmap)
+                }
+            }
+        }
+
+        fun editWine(
+            context: Context,
+            wine: FridgesFragment.Wine,
+            cameraLauncher: ActivityResultLauncher<Intent>,
+            capturedImage: Bitmap?,
+            permissionLauncher: ActivityResultLauncher<String>
+        ) {
             val dialogView = LayoutInflater.from(context).inflate(R.layout.wine_edit, null)
-            val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(context)
                 .setView(dialogView)
-            val dialog = dialogBuilder.create()
+                .create()
 
             dialogView.findViewById<MaterialTextView>(R.id.editTitleTextView)?.text = "Edit Wine"
+            val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
+
+            // Load existing image if available
+            if (wine.imagePath.isNotEmpty()) {
+                loadImage(wine.imagePath, wineImageView)
+            }
 
             val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.editWineType)
             val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
@@ -145,71 +216,97 @@ class WinesFragment : Fragment() {
             wineTypeSpinner.adapter = spinnerAdapter
             wineTypeSpinner.setSelection(wineTypes.indexOf(wine.type))
 
-            val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)
-            if (wine.imagePath.isNotEmpty()) {
-                val imageBitmap = BitmapFactory.decodeFile(wine.imagePath)
-                wineImageView.setImageBitmap(imageBitmap)
+            dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                } else {
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    cameraLauncher.launch(cameraIntent)
+                }
             }
 
-            dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                cameraLauncher.launch(cameraIntent)
-            }
             capturedImage?.let {
                 wineImageView.setImageBitmap(it)
             }
 
-            dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.setText(wine.name)
-            dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.setText(wine.year.toString())
-            dialogView.findViewById<TextInputEditText>(R.id.editVineyard)?.setText(wine.vineyard)
-            dialogView.findViewById<TextInputEditText>(R.id.editRegion)?.setText(wine.region)
-            dialogView.findViewById<TextInputEditText>(R.id.editVariety)?.setText(wine.grapeVariety)
-            dialogView.findViewById<TextInputEditText>(R.id.editRating)?.setText(wine.rating.toString())
-            dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.setText(wine.price.toString())
-            dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.setText(wine.drinkBy.toString())
-            dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.setText(wine.description)
+            val nameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
+            val yearInput = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)
+            val vineyardInput = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)
+            val regionInput = dialogView.findViewById<TextInputEditText>(R.id.editRegion)
+            val varietyInput = dialogView.findViewById<TextInputEditText>(R.id.editVariety)
+            val ratingInput = dialogView.findViewById<TextInputEditText>(R.id.editRating)
+            val priceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
+            val drinkByInput = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)
+            val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
 
-            val deleteBtn = dialogView.findViewById<Button>(R.id.deleteWineButton)
-            deleteBtn.visibility = View.VISIBLE
-            deleteBtn.setOnClickListener {
-                val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
-                val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
-                    .setView(confirmDeleteView)
-                val deleteDialog = confirmDialogBuilder.create()
-
-                val wineName = wine.name
-                confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${wineName}?"
-
-                confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
-                    wine.name = "null"
-                    deleteDialog.dismiss()
-                    dialog.dismiss()
-                    Toast.makeText(context, "${wineName} deleted", Toast.LENGTH_SHORT).show()
-                }
-
-                confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
-                    deleteDialog.dismiss()
-                }
-
-                deleteDialog.show()
-            }
+            nameInput.setText(wine.name)
+            yearInput.setText(wine.year.toString())
+            vineyardInput.setText(wine.vineyard)
+            regionInput.setText(wine.region)
+            varietyInput.setText(wine.grapeVariety)
+            ratingInput.setText(wine.rating.toString())
+            priceInput.setText(wine.price.toString())
+            drinkByInput.setText(wine.drinkBy.toString())
+            descriptionInput.setText(wine.description)
 
             val saveBtn = dialogView.findViewById<Button>(R.id.saveWineButton)
             saveBtn.text = "Save"
             saveBtn.setOnClickListener {
-                wine.name = dialogView.findViewById<TextInputEditText>(R.id.editWineName)?.text.toString()
+                var isValid = true
+
+                fun validateField(input: TextInputEditText, errorMessage: String): Boolean {
+                    if (input.text.isNullOrBlank()) {
+                        input.error = errorMessage
+                        return false
+                    }
+                    return true
+                }
+
+                fun validateNumberField(input: TextInputEditText, errorMessage: String, min: Int = Int.MIN_VALUE, max: Int = Int.MAX_VALUE): Int? {
+                    val value = input.text.toString().toIntOrNull()
+                    return if (value == null || value < min || value > max) {
+                        input.error = errorMessage
+                        null
+                    } else value
+                }
+
+                fun validateDoubleField(input: TextInputEditText, errorMessage: String, min: Double = 0.0, max: Double = 100.0): Double? {
+                    val value = input.text.toString().toDoubleOrNull()
+                    return if (value == null || value < min || value > max) {
+                        input.error = errorMessage
+                        null
+                    } else value
+                }
+
+                isValid = validateField(nameInput, "Name is required") && isValid
+                isValid = validateField(vineyardInput, "Vineyard is required") && isValid
+                isValid = validateField(regionInput, "Region is required") && isValid
+                isValid = validateField(varietyInput, "Variety is required") && isValid
+
+                val year = validateNumberField(yearInput, "Invalid year", 1000, 2100) ?: run { isValid = false; 0 }
+                val rating = validateDoubleField(ratingInput, "Rating must be between 0 and 100") ?: run { isValid = false; 0.0 }
+                val price = validateNumberField(priceInput, "Invalid price", 0) ?: run { isValid = false; 0 }
+                val drinkBy = validateNumberField(drinkByInput, "Invalid drink-by year", 1000, 2100) ?: run { isValid = false; 0 }
+
+                if (!isValid) return@setOnClickListener
+
+                wine.name = nameInput.text.toString()
                 wine.type = wineTypeSpinner.selectedItem.toString()
-                wine.year = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)?.text.toString().toIntOrNull() ?: 0
-                wine.vineyard = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)?.text.toString()
-                wine.region = dialogView.findViewById<TextInputEditText>(R.id.editRegion)?.text.toString()
-                wine.grapeVariety = dialogView.findViewById<TextInputEditText>(R.id.editVariety)?.text.toString()
-                wine.rating = dialogView.findViewById<TextInputEditText>(R.id.editRating)?.text.toString().toDoubleOrNull() ?: 0.0
-                wine.price = dialogView.findViewById<TextInputEditText>(R.id.editPrice)?.text.toString().toIntOrNull() ?: 0
-                wine.drinkBy = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)?.text.toString().toIntOrNull() ?: 0
-                wine.description = dialogView.findViewById<TextInputEditText>(R.id.editDescription)?.text.toString()
+                wine.year = year
+                wine.vineyard = vineyardInput.text.toString()
+                wine.region = regionInput.text.toString()
+                wine.grapeVariety = varietyInput.text.toString()
+                wine.rating = rating
+                wine.price = price
+                wine.drinkBy = drinkBy
+                wine.description = descriptionInput.text.toString()
 
                 capturedImage?.let {
-                    //todo
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(context, it, fileName)
+                    if (savedImagePath != null) {
+                        wine.imagePath = savedImagePath
+                    }
                 }
 
                 dialog.dismiss()
@@ -217,6 +314,7 @@ class WinesFragment : Fragment() {
 
             dialog.show()
         }
+
     }
 
     //filtering
@@ -429,7 +527,9 @@ class WinesFragment : Fragment() {
 
         override fun onBindViewHolder(holder: AllWinesViewHolder, i: Int) {
             val tempWine = wines[i]
-            if (tempWine.imagePath != "null") { holder.wineImageView.setImageBitmap(loadImage(wines[i].imagePath)) }
+            if (tempWine.imagePath != "null") {
+                loadImage(tempWine.imagePath, holder.wineImageView)
+            }
             holder.wineNameTextView.text = tempWine.name
             holder.wineDescTextView.text = "${tempWine.year}, ${tempWine.vineyard}"
             holder.itemView.setOnClickListener { onWineClick(tempWine) }
@@ -438,11 +538,6 @@ class WinesFragment : Fragment() {
         fun updateList(newWines: List<FridgesFragment.Wine>) {
             wines = newWines
             notifyDataSetChanged()
-        }
-
-        private fun loadImage(path: String): Bitmap? {
-            try { return BitmapFactory.decodeFile(path) } catch (e: Exception) { e.printStackTrace() }
-            return null
         }
     }
 }
