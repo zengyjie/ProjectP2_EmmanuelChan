@@ -108,6 +108,7 @@ class WinesFragment : Fragment() {
                     "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
 
         dialogView.findViewById<Button>(R.id.editWineButton).visibility = View.GONE
+        dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
         moveButton.text = "locate"

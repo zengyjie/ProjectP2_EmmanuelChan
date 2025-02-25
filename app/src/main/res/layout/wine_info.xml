@@ -64,4 +64,19 @@
         android:textSize="14sp"
         app:backgroundTint="#00FFFFFF"
         app:cornerRadius="4dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/duplicateWineButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#00FFFFFF"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="Duplicate"
+        android:textAllCaps="true"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="14sp"
+        app:backgroundTint="#00FFFFFF"
+        app:cornerRadius="4dp" />
+
 </LinearLayout>

@@ -39,7 +39,7 @@ class CustomSpinner : LinearLayout {
 
     private fun updateCount(delta: Int) {
         count += delta
-        count.coerceIn(1, 20)
+        count = count.coerceIn(1, 20)
         countTextView!!.text = count.toString()
     }
 

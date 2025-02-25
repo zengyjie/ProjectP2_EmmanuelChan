@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         var moving = false
+        var moveMode = "move"
         var selectedWine = Wine()
         var selectedIndices = mutableListOf(0, 0, 0, 0)
         var fridges = mutableListOf<Fridge>()
