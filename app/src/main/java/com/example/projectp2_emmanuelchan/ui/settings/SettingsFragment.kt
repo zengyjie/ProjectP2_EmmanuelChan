@@ -1,7 +1,6 @@
 package com.example.projectp2_emmanuelchan.ui.settings
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,11 +12,10 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentSettingsBinding
-import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridges
-import com.google.gson.Gson
+import java.io.File
 
 class SettingsFragment : Fragment() {
 
@@ -61,6 +59,11 @@ class SettingsFragment : Fragment() {
             confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
 
             confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                val wineWiseDir = File(context?.filesDir, "WineWise")
+                if (wineWiseDir.exists() && wineWiseDir.isDirectory) {
+                    val files = wineWiseDir.listFiles()
+                    files?.forEach { it.delete() }
+                }
                 fridges.clear()
                 val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
                 sharedPreferences.edit().remove("fridges_data").apply()

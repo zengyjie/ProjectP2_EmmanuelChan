@@ -2,6 +2,7 @@ package com.example.projectp2_emmanuelchan.ui.fridges
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +14,15 @@ import android.widget.RadioButton
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.ToggleButton
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.origSelectedFridge
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentFridgesBinding
 import com.example.projectp2_emmanuelchan.ui.custom.CustomSpinner
@@ -31,22 +37,11 @@ class FridgesFragment : Fragment() {
     private val binding get() = _binding!!
 
     companion object {
-        var fridges = mutableListOf<Fridge>()
-        var selectedFridge: Fridge = Fridge()
-        var origSelectedFridge: Fridge = Fridge()
-        var highlightedWine: Wine = Wine()
         lateinit var fridgeRecyclerView: RecyclerView
+        var fridgeToOpen: Fridge? = null
+        var itemLayer: Int = 3
 
-        fun getFridge(name: String): Fridge {
-            for (f in fridges) {
-                if (f.name.equals(name)) {
-                    return f
-                }
-            }
-            return Fridge(name="null")
-        }
-
-        fun openFridge(fridge: Fridge, context: Context, itemLayer: Int = 3) {
+        fun openFridge(fridge: Fridge, context: Context) {
             selectedFridge = fridge
             val intent = Intent(context, FridgeActivity::class.java)
             intent.putExtra("itemLayer", itemLayer)
@@ -66,18 +61,26 @@ class FridgesFragment : Fragment() {
         loadFridges()
 
         fridgeRecyclerView = binding.fridgeRecyclerView
-        val spanCount = if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
+        val spanCount = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
         fridgeAdapter = FridgeAdapter(fridges, { fridge ->
-            highlightedWine = Wine()
             origSelectedFridge = fridge
-            openFridge(fridge, requireContext(), 3) },
+            openFridge(fridge, requireContext()) },
             { fridge -> showEditFridgePopup(fridge) })
         fridgeRecyclerView.adapter = fridgeAdapter
 
         val floatingActionButton: FloatingActionButton = binding.root.findViewById(R.id.floatingActionButton)
         floatingActionButton.setOnClickListener { showAddFridgePopup() }
 
+        if (fridgeToOpen != null) {
+            val position = fridges.indexOfFirst { it.name == fridgeToOpen!!.name }
+            if (position != -1) {
+                fridgeRecyclerView.post {
+                    fridgeRecyclerView.findViewHolderForAdapterPosition(position)?.itemView?.performClick()
+                }
+            }
+            fridgeToOpen = null
+        }
         return root
     }
 
@@ -89,7 +92,7 @@ class FridgesFragment : Fragment() {
     //functions
     fun showAddFridgePopup() {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.add_fridge, null)
-        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val dialogBuilder = AlertDialog.Builder(requireContext())
             .setView(dialogView)
         val dialog = dialogBuilder.create()
         dialogView.findViewById<Button>(R.id.deleteButton).visibility = View.GONE
@@ -104,7 +107,7 @@ class FridgesFragment : Fragment() {
 
     fun showEditFridgePopup(fridge: Fridge) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.add_fridge, null)
-        val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        val dialogBuilder = AlertDialog.Builder(requireContext())
             .setView(dialogView)
         val dialog = dialogBuilder.create()
 
@@ -117,7 +120,7 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.deleteButton).setOnClickListener {
             val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
-            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            val confirmDialogBuilder = AlertDialog.Builder(requireContext())
                 .setView(confirmDeleteView)
             val deleteDialog = confirmDialogBuilder.create()
 
@@ -298,7 +301,6 @@ class FridgesFragment : Fragment() {
             holder.fridgeImageView.setImageResource(fridge.icon)
             holder.fridgeNameTextView.text = fridge.name
 
-            // Correctly count total wine slots
             val totalWines = fridge.depth * fridge.sections * fridge.rps * fridge.columns
             val filledSlots = fridge.wines.sumOf { layer ->
                 layer.sumOf { section ->
@@ -321,6 +323,7 @@ class FridgesFragment : Fragment() {
         override fun getItemCount(): Int = fridges.size
     }
 
+    //save/load
     override fun onResume() {
         super.onResume()
         fridgeRecyclerView.adapter?.notifyDataSetChanged()

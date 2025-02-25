@@ -3,7 +3,6 @@ package com.example.projectp2_emmanuelchan
 import android.content.Context
 import android.os.Bundle
 import android.view.MotionEvent
-import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
@@ -12,7 +11,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.projectp2_emmanuelchan.databinding.ActivityMainBinding
-import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Fridge
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Wine
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,8 +20,23 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         var moving = false
-        var selectedWine = FridgesFragment.Wine()
+        var selectedWine = Wine()
         var selectedIndices = mutableListOf(0, 0, 0, 0)
+        var fridges = mutableListOf<Fridge>()
+        var highlightedWineName: String = "null"
+        var selectedFridge: Fridge = Fridge()
+        var origSelectedFridge: Fridge = Fridge()
+
+        fun getFridge(name: String): Int {
+            var i = 0
+            for (f in fridges) {
+                if (f.name.equals(name)) {
+                    return i
+                }
+                i++
+            }
+            return -1
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
