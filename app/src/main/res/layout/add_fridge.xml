@@ -68,7 +68,7 @@
             <RadioButton
                 android:id="@+id/fridge1RadioButton"
                 style="@style/radioButton"
-                android:layout_width="wrap_content"
+                android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:button="@null"
@@ -78,7 +78,7 @@
             <RadioButton
                 android:id="@+id/fridge2RadioButton"
                 style="@style/radioButton"
-                android:layout_width="wrap_content"
+                android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:button="@null"

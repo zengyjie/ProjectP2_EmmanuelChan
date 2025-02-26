@@ -210,7 +210,6 @@ class FridgesFragment : Fragment() {
         fridge.wines = newWines
     }
 
-
     fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
         val nameEditText = dialogView.findViewById<EditText>(R.id.searchBar)
         var name = nameEditText?.text.toString().trim()
@@ -231,8 +230,8 @@ class FridgesFragment : Fragment() {
         }
 
         var icon: Int = R.drawable.default_fridge
-        if (dialogView.findViewById<RadioButton>(R.id.fridge1RadioButton)!!.isSelected) { icon = R.drawable.fridge_1 }
-        if (dialogView.findViewById<RadioButton>(R.id.fridge2RadioButton)!!.isSelected) { icon = R.drawable.fridge_2 }
+        if (dialogView.findViewById<RadioButton>(R.id.fridge1RadioButton)!!.isChecked) { icon = R.drawable.fridge_1 }
+        if (dialogView.findViewById<RadioButton>(R.id.fridge2RadioButton)!!.isChecked) { icon = R.drawable.fridge_2 }
         val depthToggle = dialogView.findViewById<ToggleButton>(R.id.depthToggleButton)
         val depth = if (depthToggle?.isChecked == true) 2 else 1
 

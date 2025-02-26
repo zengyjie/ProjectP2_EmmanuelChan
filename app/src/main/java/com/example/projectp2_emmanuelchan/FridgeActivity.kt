@@ -1,5 +1,5 @@
 package com.example.projectp2_emmanuelchan
-//TODO:duplication
+
 import android.app.Activity
 import android.Manifest
 import android.app.AlertDialog
@@ -55,6 +55,7 @@ class FridgeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFridgeBinding
     private lateinit var wineRecyclerView: RecyclerView
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private var selectedImageView: ImageView? = null
     private var capturedImage: Bitmap? = null
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -154,6 +155,8 @@ class FridgeActivity : AppCompatActivity() {
 
                     if (savedImagePath != null) {
                         selectedWine.imagePath = savedImagePath
+                        wineRecyclerView.adapter?.notifyDataSetChanged()
+                        selectedImageView?.setImageBitmap(imageBitmap)
                     } else {
                         Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
                     }
@@ -187,7 +190,7 @@ class FridgeActivity : AppCompatActivity() {
         val priceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
         val drinkByInput = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)
         val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
-        val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)//todo
+        selectedImageView = dialogView.findViewById(R.id.wineImage)
 
         // Camera button handling
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
@@ -416,6 +419,7 @@ class FridgeActivity : AppCompatActivity() {
 
         if (wine.imagePath.isNotEmpty()) { loadImage(wine.imagePath, editImageView) }
         else { editImageView.setImageResource(R.drawable.bottle_front) }
+        selectedImageView = editImageView
 
         val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.editWineType)
         val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
