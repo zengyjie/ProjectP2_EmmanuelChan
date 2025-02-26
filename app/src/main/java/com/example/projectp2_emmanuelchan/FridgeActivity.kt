@@ -144,27 +144,9 @@ class FridgeActivity : AppCompatActivity() {
             changeFridgeButton.visibility = View.GONE
             movingButtonsLayout.visibility = View.GONE
         }
-
-        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
-                if (imageBitmap != null) {
-                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
-                    val savedImagePath = saveImage(this, imageBitmap, fileName)
-
-                    if (savedImagePath != null) {
-                        selectedWine.imagePath = savedImagePath
-                    } else {
-                        Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } else {
-                Toast.makeText(this, "Image capture failed", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
-    private fun showAddWinePopup(index: Int, cameraLauncher: ActivityResultLauncher<Intent>, permissionLauncher: ActivityResultLauncher<String>) {
+    private fun showAddWinePopup(index: Int, permissionLauncher: ActivityResultLauncher<String>) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_edit, null)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
@@ -189,7 +171,25 @@ class FridgeActivity : AppCompatActivity() {
         val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
         val wineImageView = dialogView.findViewById<ImageView>(R.id.wineImage)//todo
 
-        // Camera button handling
+        val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(this, imageBitmap, fileName)
+
+                    if (savedImagePath != null) {
+                        selectedWine.imagePath = savedImagePath
+                        wineImageView.setImageBitmap(imageBitmap)
+                    } else {
+                        Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(this, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -288,9 +288,9 @@ class FridgeActivity : AppCompatActivity() {
             "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
-            dialog.dismiss()
-            editWine(this, wine, cameraLauncher, capturedImage, permissionLauncher)
+            editWine(this, wine, capturedImage, permissionLauncher)
             wineRecyclerView.adapter?.notifyDataSetChanged()
+            dialog.dismiss()
         }
 
         dialogView.findViewById<Button>(R.id.moveWineButton).setOnClickListener {
@@ -402,7 +402,6 @@ class FridgeActivity : AppCompatActivity() {
     private fun editWine(
         context: Context,
         wine: FridgesFragment.Wine,
-        cameraLauncher: ActivityResultLauncher<Intent>,
         capturedImage: Bitmap?,
         permissionLauncher: ActivityResultLauncher<String>
     ) {
@@ -416,6 +415,26 @@ class FridgeActivity : AppCompatActivity() {
 
         if (wine.imagePath.isNotEmpty()) { loadImage(wine.imagePath, editImageView) }
         else { editImageView.setImageResource(R.drawable.bottle_front) }
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(context, imageBitmap, fileName)
+
+                    if (savedImagePath != null) {
+                        wine.imagePath = savedImagePath
+                        dialog.dismiss()
+                        editWine(context, wine, imageBitmap, permissionLauncher)
+                    } else {
+                        Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.editWineType)
         val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
@@ -431,6 +450,26 @@ class FridgeActivity : AppCompatActivity() {
                 cameraLauncher.launch(cameraIntent)
             }
         }
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(context, imageBitmap, fileName)
+
+                    if (savedImagePath != null) {
+                        wine.imagePath = savedImagePath
+                        editImageView.setImageBitmap(imageBitmap)  // Update the image view
+                    } else {
+                        Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
         val nameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
         val yearInput = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)
@@ -622,7 +661,7 @@ class FridgeActivity : AppCompatActivity() {
                 val activity = holder.itemView.context as? FridgeActivity ?: return@setOnClickListener
                 if (moving && wine.name == "null") {(holder.itemView.context as? FridgeActivity)?.moveWine(position) }
                 else if (wine.name == "null") {
-                    (holder.itemView.context as? FridgeActivity)?.showAddWinePopup(position, activity.cameraLauncher, activity.permissionLauncher)
+                    (holder.itemView.context as? FridgeActivity)?.showAddWinePopup(position, activity.permissionLauncher)
                 }
                 else { (holder.itemView.context as? FridgeActivity)?.openWine(wine, position) }
             }
