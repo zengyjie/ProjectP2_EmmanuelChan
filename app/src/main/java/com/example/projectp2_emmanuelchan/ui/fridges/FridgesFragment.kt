@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.origSelectedFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.R
@@ -250,31 +249,18 @@ class FridgesFragment : Fragment() {
         var name: String = "null",
         var price: Int = 10,
         var year: Int = 2000,
-        var type: String = "Red",
+        var type: String = "Type",
         var vineyard: String = "Vineyard",
-        var region: String = "Bordeaux",
-        var grapeVariety: String = "Cabernet Sauvignon",
-        var rating: Double = 4.5,
-        var tastingNotes: String = "Fruity with hints of oak and vanilla",
+        var region: String = "Region",
+        var grapeVariety: String = "Variety",
+        var rating: Double = 50.0,
+        var pairings: String = "",
         var drinkBy: Int = 2050,
         var description: String = "desc",
         var imagePath: String = "null",
         var parentFridge: String = "New Fridge",
         var drunk: Boolean = false
     )
-
-    fun addWine(fridge: Fridge, wine: Wine, layer: Int = 0, section: Int = 0, row: Int = 0, column: Int = 0) {
-        if (fridge.wines[layer][section][row][column].name != "null") return
-
-        for (l in 0 until fridge.wines.size) {
-            for (s in 0 until fridge.wines[l].size) {
-                for (r in 0 until fridge.wines[l][s].size) {
-                    for (c in 0 until fridge.wines[l][s][r].size) {
-                        if (fridge.wines[l][s][r][c].name == wine.name) return } } } }
-
-        fridge.wines[layer][section][row][column] = wine
-        fridgeAdapter.notifyDataSetChanged()
-    }
 
     //adapter
     class FridgeAdapter(

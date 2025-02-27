@@ -1,82 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/colorBackground"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:colorBackground"
+    android:padding="16dp"
+    android:scrollbarSize="0dp">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/wineInfoNameTextView"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Wine Name"
-        android:textAlignment="center"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:background="?android:attr/colorBackground"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
-        android:scaleType="centerCrop"
-        app:srcCompat="@drawable/bottle_front" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/wineInfoNameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Wine Name"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/wineInfoDescTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:lineSpacingExtra="8dp"
-        android:text="[year]\n[vineyard, region]\nVariety: [variety]\nRating: [rating]\nBought at: [price]\nDrink by: [drinkBy]\n[description]"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="16sp" />
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/bottle_front" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/editWineButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#00FFFFFF"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text="Edit"
-        android:textAllCaps="true"
-        android:textColor="?attr/colorOnPrimary"
-        android:textSize="14sp"
-        app:backgroundTint="#00FFFFFF"
-        app:cornerRadius="4dp" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/wineInfoDescTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:lineSpacingExtra="8dp"
+            android:text="[year]\n[vineyard, region]\nVariety: [variety]\nRating: [rating]\nBought at: [price]\nDrink by: [drinkBy]\n[description]"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/moveWineButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#00FFFFFF"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text="Move"
-        android:textAllCaps="true"
-        android:textColor="?attr/colorOnPrimary"
-        android:textSize="14sp"
-        app:backgroundTint="#00FFFFFF"
-        app:cornerRadius="4dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/duplicateWineButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#00FFFFFF"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text="Duplicate"
-        android:textAllCaps="true"
-        android:textColor="?attr/colorOnPrimary"
-        android:textSize="14sp"
-        app:backgroundTint="#00FFFFFF"
-        app:cornerRadius="4dp" />
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/wineInfoDescTextView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:lineSpacingExtra="8dp"
+                android:text="Suggested pairings:"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
 
-</LinearLayout>
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/showPairingsButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_weight="1"
+                android:background="#00FFFFFF"
+                app:srcCompat="@drawable/ic_add" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editWineButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Edit"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moveWineButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Move"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/duplicateWineButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Duplicate"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="4dp" />
+
+    </LinearLayout>
+</ScrollView>

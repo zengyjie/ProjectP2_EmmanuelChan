@@ -10,6 +10,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
@@ -20,6 +21,7 @@ import android.widget.NumberPicker
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
@@ -27,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
@@ -34,6 +37,8 @@ import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeToOpen
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.io.File
 
 class WinesFragment : Fragment() {
@@ -107,6 +112,58 @@ class WinesFragment : Fragment() {
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
                     "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
 
+        //deepcopyTODO
+        dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
+            val dialogView1 = LayoutInflater.from(requireContext()).inflate(R.layout.wine_pairings, null)
+            val dialogBuilder1 = AlertDialog.Builder(requireContext()).setView(dialogView1)
+            val dialog1 = dialogBuilder1.create()
+
+            dialogView1.findViewById<TextView>(R.id.winePairingsNameTextView).text = "Pairings for ${wine.name}"
+
+            val pairingsEditText = dialogView1.findViewById<AppCompatEditText>(R.id.winePairingsEditText)
+            val revertPairingsButton = dialogView1.findViewById<Button>(R.id.revertPairingsButton)
+            val originalPairings = getPairingSuggestion(requireContext(), wine.grapeVariety)
+
+            pairingsEditText.setText(wine.pairings)
+
+            pairingsEditText.setOnClickListener {
+                pairingsEditText.isFocusable = true
+                pairingsEditText.isFocusableInTouchMode = true
+            }
+
+            pairingsEditText.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    wine.pairings = pairingsEditText.text.toString()
+                    val indices = findWine(selectedFridge, wine)
+                    if (indices != null) {
+                        selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
+                    }
+                }
+            }
+
+            dialog1.setOnDismissListener {
+                wine.pairings = pairingsEditText.text.toString()
+                val fridgeIndex = getFridge(wine.parentFridge)
+
+                if (fridgeIndex != -1) {
+                    val fridge = fridges[fridgeIndex]
+                    val indices = findWine(fridge, wine)
+
+                    if (indices != null) {
+                        fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
+                    }
+                }
+            }
+
+
+            revertPairingsButton.setOnClickListener {
+                pairingsEditText.setText(originalPairings)
+                wine.pairings = originalPairings
+            }
+
+            dialog1.show()
+        }
+
         dialogView.findViewById<Button>(R.id.editWineButton).visibility = View.GONE
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
@@ -145,6 +202,18 @@ class WinesFragment : Fragment() {
             }
         }
 
+        fun getPairingSuggestion(context: Context, variety: String): String {
+            return try {
+                val jsonString = context.assets.open("pairings.json").bufferedReader().use { it.readText() }
+
+                val jsonMap: Map<String, String> = Gson().fromJson(jsonString, object : TypeToken<Map<String, String>>() {}.type)
+
+                jsonMap[variety] ?: ""
+            } catch (e: Exception) {
+                e.printStackTrace()
+                ""
+            }
+        }
     }
 
     //filtering

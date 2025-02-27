@@ -16,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
@@ -27,6 +28,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -43,6 +45,7 @@ import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.findWine
+import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.getPairingSuggestion
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.loadImage
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
@@ -192,7 +195,6 @@ class FridgeActivity : AppCompatActivity() {
         val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
         selectedImageView = dialogView.findViewById(R.id.wineImage)
 
-        // Camera button handling
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -254,20 +256,19 @@ class FridgeActivity : AppCompatActivity() {
                 drinkBy = drinkByIn
                 description = descriptionInput.text.toString()
                 parentFridge = selectedFridge.name
+                pairings = getPairingSuggestion(applicationContext, grapeVariety)
             }
 
             val fridge = selectedFridge
             val indices = getIndicesFromPosition(index, fridge)
             val selectedLayer = if (binding.depthToggleButton.isChecked) 1 else 0
 
-            while (fridge.wines[selectedLayer].size <= indices[0]) fridge.wines[selectedLayer].add(mutableListOf())
-            while (fridge.wines[selectedLayer][indices[0]].size <= indices[1]) fridge.wines[selectedLayer][indices[0]].add(mutableListOf())
-            while (fridge.wines[selectedLayer][indices[0]][indices[1]].size <= indices[2]) fridge.wines[selectedLayer][indices[0]][indices[1]].add(FridgesFragment.Wine())
+            fridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]] = selectedWine
 
-            fridge.wines[selectedLayer][indices[0]][indices[1]][indices[2]] = selectedWine
+            println(fridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]].name)
 
             dialog.dismiss()
-            wineRecyclerView.adapter?.notifyItemChanged(index)
+            wineRecyclerView.adapter?.notifyDataSetChanged()
         }
 
         dialog.show()
@@ -289,6 +290,50 @@ class FridgeActivity : AppCompatActivity() {
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
             "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
             "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
+
+        dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
+            val dialogView1 = LayoutInflater.from(this).inflate(R.layout.wine_pairings, null)
+            val dialogBuilder1 = AlertDialog.Builder(this).setView(dialogView1)
+            val dialog1 = dialogBuilder1.create()
+
+            dialogView1.findViewById<TextView>(R.id.winePairingsNameTextView).text = "Pairings for ${wine.name}"
+
+            val pairingsEditText = dialogView1.findViewById<AppCompatEditText>(R.id.winePairingsEditText)
+            val revertPairingsButton = dialogView1.findViewById<Button>(R.id.revertPairingsButton)
+            val originalPairings = getPairingSuggestion(this, wine.grapeVariety)
+
+            pairingsEditText.setText(wine.pairings)
+
+            pairingsEditText.setOnClickListener {
+                pairingsEditText.isFocusable = true
+                pairingsEditText.isFocusableInTouchMode = true
+            }
+
+            pairingsEditText.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    wine.pairings = pairingsEditText.text.toString()
+                    val indices = findWine(selectedFridge, wine)
+                    if (indices != null) {
+                        selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
+                    }
+                }
+            }
+
+            dialog1.setOnDismissListener {
+                wine.pairings = pairingsEditText.text.toString()
+                val indices = findWine(selectedFridge, wine)
+                if (indices != null) {
+                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
+                }
+            }
+
+            revertPairingsButton.setOnClickListener {
+                pairingsEditText.setText(originalPairings)
+                wine.pairings = originalPairings
+            }
+
+            dialog1.show()
+        }
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
@@ -559,7 +604,7 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.region,
             selectedWine.grapeVariety,
             selectedWine.rating,
-            selectedWine.tastingNotes,
+            selectedWine.pairings,
             selectedWine.drinkBy,
             selectedWine.description,
             selectedWine.imagePath,
