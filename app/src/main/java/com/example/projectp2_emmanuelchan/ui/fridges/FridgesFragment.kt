@@ -46,6 +46,29 @@ class FridgesFragment : Fragment() {
             intent.putExtra("itemLayer", itemLayer)
             context.startActivity(intent)
         }
+
+
+         fun saveFridges(context: Context) {
+            val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+
+            val gson = Gson()
+            val json = gson.toJson(fridges)
+
+            editor.putString("fridges_data", json)
+            editor.apply()
+        }
+
+         fun loadFridges(context: Context) {
+            val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            val json = sharedPreferences.getString("fridges_data", null)
+
+            if (json != null) {
+                val gson = Gson()
+                val type = object : TypeToken<MutableList<Fridge>>() {}.type
+                fridges = gson.fromJson(json, type) ?: mutableListOf()
+            }
+        }
     }
 
     private lateinit var fridgeAdapter: FridgeAdapter
@@ -57,7 +80,7 @@ class FridgesFragment : Fragment() {
     ): View {
         _binding = FragmentFridgesBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        loadFridges()
+        loadFridges(requireContext())
 
         fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
@@ -316,33 +339,11 @@ class FridgesFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        saveFridges()
+        saveFridges(requireContext())
     }
 
     override fun onStop() {
         super.onStop()
-        saveFridges()
-    }
-
-    private fun saveFridges() {
-        val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-
-        val gson = Gson()
-        val json = gson.toJson(fridges)
-
-        editor.putString("fridges_data", json)
-        editor.apply()
-    }
-
-    private fun loadFridges() {
-        val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-        val json = sharedPreferences.getString("fridges_data", null)
-
-        if (json != null) {
-            val gson = Gson()
-            val type = object : TypeToken<MutableList<Fridge>>() {}.type
-            fridges = gson.fromJson(json, type) ?: mutableListOf()
-        }
+        saveFridges(requireContext())
     }
 }

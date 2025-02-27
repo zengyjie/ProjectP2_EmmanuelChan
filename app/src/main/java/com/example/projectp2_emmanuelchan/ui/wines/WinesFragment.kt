@@ -1,16 +1,19 @@
 package com.example.projectp2_emmanuelchan.ui.wines
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
@@ -20,12 +23,18 @@ import android.widget.ImageView
 import android.widget.NumberPicker
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.editWine
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImage
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.selectedImageView
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
@@ -36,6 +45,7 @@ import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeToOpen
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.saveFridges
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -49,7 +59,16 @@ class WinesFragment : Fragment() {
     private lateinit var allWinesAdapter: AllWinesAdapter
     private val allWines = mutableListOf<FridgesFragment.Wine>()
     private var filter = Filter()
-
+    private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private var capturedImage: Bitmap? = null
+    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            cameraLauncher.launch(cameraIntent)
+        } else {
+            Toast.makeText(requireContext() , "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
@@ -85,6 +104,25 @@ class WinesFragment : Fragment() {
         binding.searchBar.addTextChangedListener{ text ->
             filter.name = binding.searchBar.text.toString()
             filterWines(filter)
+        }
+
+        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageBitmap = result.data?.extras?.get("data") as? Bitmap
+                if (imageBitmap != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImage(requireContext(), imageBitmap, fileName)
+
+                    if (savedImagePath != null) {
+                        selectedWine.imagePath = savedImagePath
+                        selectedImageView?.setImageBitmap(imageBitmap)
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(requireContext(), "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
         }
 
         return root
@@ -164,7 +202,11 @@ class WinesFragment : Fragment() {
             dialog1.show()
         }
 
-        dialogView.findViewById<Button>(R.id.editWineButton).visibility = View.GONE
+        dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
+            dialog.dismiss()
+            editWine(requireContext(), wine, cameraLauncher, capturedImage, permissionLauncher, allWinesAdapter)
+        }
+
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
@@ -443,5 +485,16 @@ class WinesFragment : Fragment() {
             wines = newWines
             notifyDataSetChanged()
         }
+    }
+
+    //save/load
+    override fun onPause() {
+        super.onPause()
+        saveFridges(requireContext())
+    }
+
+    override fun onStop() {
+        super.onStop()
+        saveFridges(requireContext())
     }
 }
