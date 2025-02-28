@@ -1,5 +1,5 @@
 package com.example.projectp2_emmanuelchan
-
+//todo gallery
 import android.app.Activity
 import android.Manifest
 import android.app.AlertDialog
@@ -355,6 +355,7 @@ class FridgeActivity : AppCompatActivity() {
         val wineYearInput = dialogView.findViewById<TextInputEditText>(R.id.editWineYear)
         val vineyardInput = dialogView.findViewById<TextInputEditText>(R.id.editVineyard)
         val regionInput = dialogView.findViewById<TextInputEditText>(R.id.editRegion)
+        val countryInput = dialogView.findViewById<TextInputEditText>(R.id.editCountry)
         val varietyInput = dialogView.findViewById<TextInputEditText>(R.id.editVariety)
         val ratingInput = dialogView.findViewById<TextInputEditText>(R.id.editRating)
         val priceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
@@ -402,6 +403,7 @@ class FridgeActivity : AppCompatActivity() {
             isValid = validateField(wineNameInput, "Name is required") && isValid
             isValid = validateField(vineyardInput, "Vineyard is required") && isValid
             isValid = validateField(regionInput, "Region is required") && isValid
+            isValid = validateField(countryInput, "Country is required") && isValid
             isValid = validateField(varietyInput, "Variety is required") && isValid
 
             val yearIn = validateNumberField(wineYearInput, "Invalid year", 1000, 2100) ?: run { isValid = false; 0 }
@@ -417,6 +419,7 @@ class FridgeActivity : AppCompatActivity() {
                 year = yearIn
                 vineyard = vineyardInput.text.toString()
                 region = regionInput.text.toString()
+                country = countryInput.text.toString()
                 grapeVariety = varietyInput.text.toString()
                 rating = ratingIn
                 price = priceIn
@@ -453,10 +456,10 @@ class FridgeActivity : AppCompatActivity() {
             loadImage(wine.imagePath, imageView)
         }
 
-        dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = wine.name
+        dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = "${wine.name}\n(${wine.year})"
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
-            "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
-            "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
+            "${wine.vineyard}\n${wine.type} wine from ${wine.region}, ${wine.country}\nVariety: ${wine.grapeVariety}\nRating: " +
+            "${wine.rating} / 100\nNotes:\n${wine.description}\nDrink by: ${wine.drinkBy}\nBought at: $${wine.price}"
 
         dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
             val dialogView1 = LayoutInflater.from(this).inflate(R.layout.wine_pairings, null)
@@ -606,6 +609,7 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.type,
             selectedWine.vineyard,
             selectedWine.region,
+            selectedWine.country,
             selectedWine.grapeVariety,
             selectedWine.rating,
             selectedWine.pairings,

@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.NumberPicker
@@ -145,12 +144,11 @@ class WinesFragment : Fragment() {
             loadImage(wine.imagePath, imageView)
         }
 
-        dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = wine.name
+        dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = "${wine.name}\n(${wine.year})"
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
-            "${wine.year}\n${wine.vineyard}, ${wine.region}\nVariety: ${wine.grapeVariety}\nRating: " +
-                    "${wine.rating}\nBought at: $${wine.price}\nDrink by: ${wine.drinkBy}\nNotes:\n${wine.description}"
+            "${wine.vineyard}\n${wine.type} wine from ${wine.region}, ${wine.country}\nVariety: ${wine.grapeVariety}\nRating: " +
+            "${wine.rating} / 100\nNotes:\n${wine.description}\nDrink by: ${wine.drinkBy}\nBought at: $${wine.price}"
 
-        //deepcopyTODO
         dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
             val dialogView1 = LayoutInflater.from(requireContext()).inflate(R.layout.wine_pairings, null)
             val dialogBuilder1 = AlertDialog.Builder(requireContext()).setView(dialogView1)
@@ -266,6 +264,8 @@ class WinesFragment : Fragment() {
         val maxPrice: Int? = null,
         val type: String? = null,
         val vineyard: String? = null,
+        val region: String? = null,
+        val country: String? = null,
         val minRating: Double? = null,
         val maxRating: Double? = null,
         var name: String? = null
@@ -276,42 +276,61 @@ class WinesFragment : Fragment() {
             (filter.year == null || wine.year == filter.year) &&
                     (filter.minPrice == null || wine.price >= filter.minPrice) &&
                     (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
-                    (filter.type.isNullOrEmpty() || wine.type == filter.type) &&
+                    (filter.type.isNullOrEmpty() || wine.type.equals(filter.type, ignoreCase = true)) &&
                     (filter.vineyard.isNullOrEmpty() || wine.vineyard.contains(filter.vineyard, ignoreCase = true)) &&
+                    (filter.region.isNullOrEmpty() || wine.region.contains(filter.region, ignoreCase = true)) &&
+                    (filter.country.isNullOrEmpty() || wine.parentFridge.contains(filter.country, ignoreCase = true)) &&
                     (filter.minRating == null || wine.rating >= filter.minRating) &&
                     (filter.maxRating == null || wine.rating <= filter.maxRating) &&
-                    (filter.name == null || wine.name.contains(filter.name!!))
+                    (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true))
         }
 
         allWinesAdapter.updateList(filteredList)
     }
 
     private fun showFilterDialog() {
-
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.filter_dialog, null)
         val dialogBuilder = AlertDialog.Builder(requireContext()).setView(dialogView)
         val dialog = dialogBuilder.create()
 
-        val minPriceButton = dialogView.findViewById<Button>(R.id.minPriceButton)
-        val maxPriceButton = dialogView.findViewById<Button>(R.id.maxPriceButton)
-        val priceCheckBox = dialogView.findViewById<CheckBox>(R.id.priceCheckBox)
+        val allVineyards = allWines.map { it.vineyard }.filter { it.isNotEmpty() }.distinct().sorted()
+        val allRegions = allWines.map { it.region }.filter { it.isNotEmpty() }.distinct().sorted()
+        val allCountries = allWines.map { it.parentFridge }.filter { it.isNotEmpty() }.distinct().sorted()
 
-        val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.wineTypeSpinner)
-        val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
-        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, wineTypes)
-        wineTypeSpinner.adapter = spinnerAdapter
-        val typeCheckBox = dialogView.findViewById<CheckBox>(R.id.typeCheckBox)
+        fun setupSpinner(spinner: Spinner, options: List<String>, selectedValue: String?) {
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, options)
+            spinner.adapter = adapter
+            selectedValue?.let { spinner.setSelection(options.indexOf(it).takeIf { it >= 0 } ?: 0) }
+        }
 
         val yearPickerButton = dialogView.findViewById<ImageButton>(R.id.yearPickerButton)
         val yearTextView = dialogView.findViewById<TextView>(R.id.yearTextView)
         val yearCheckBox = dialogView.findViewById<CheckBox>(R.id.yearCheckBox)
 
-        val vineyardEditText = dialogView.findViewById<EditText>(R.id.vineyardEditText)
+        val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.wineTypeSpinner)
+        val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
+        setupSpinner(wineTypeSpinner, wineTypes, filter.type)
+        val typeCheckBox = dialogView.findViewById<CheckBox>(R.id.typeCheckBox)
+
+        val vineyardSpinner = dialogView.findViewById<Spinner>(R.id.vineyardSpinner)
         val vineyardCheckBox = dialogView.findViewById<CheckBox>(R.id.vineyardCheckBox)
+        setupSpinner(vineyardSpinner, allVineyards, filter.vineyard)
+
+        val regionSpinner = dialogView.findViewById<Spinner>(R.id.regionSpinner)
+        val regionCheckBox = dialogView.findViewById<CheckBox>(R.id.regionCheckBox)
+        setupSpinner(regionSpinner, allRegions, filter.region)
+
+        val countrySpinner = dialogView.findViewById<Spinner>(R.id.countrySpinner)
+        val countryCheckBox = dialogView.findViewById<CheckBox>(R.id.countryCheckBox)
+        setupSpinner(countrySpinner, allCountries, filter.country)
 
         val minRatingButton = dialogView.findViewById<Button>(R.id.minRatingButton)
         val maxRatingButton = dialogView.findViewById<Button>(R.id.maxRatingButton)
         val ratingCheckBox = dialogView.findViewById<CheckBox>(R.id.ratingCheckBox)
+
+        val minPriceButton = dialogView.findViewById<Button>(R.id.minPriceButton)
+        val maxPriceButton = dialogView.findViewById<Button>(R.id.maxPriceButton)
+        val priceCheckBox = dialogView.findViewById<CheckBox>(R.id.priceCheckBox)
 
         minPriceButton.text = filter.minPrice?.toString() ?: "Min"
         maxPriceButton.text = filter.maxPrice?.toString() ?: "Max"
@@ -320,8 +339,9 @@ class WinesFragment : Fragment() {
         yearTextView.text = filter.year?.toString() ?: "Select Year"
         yearCheckBox.isChecked = filter.year != null
 
-        vineyardEditText.setText(filter.vineyard ?: "")
         vineyardCheckBox.isChecked = filter.vineyard != null
+        regionCheckBox.isChecked = filter.region != null
+        countryCheckBox.isChecked = filter.country != null
 
         minRatingButton.text = filter.minRating?.toString() ?: "Min"
         maxRatingButton.text = filter.maxRating?.toString() ?: "Max"
@@ -333,7 +353,6 @@ class WinesFragment : Fragment() {
                 maxValue = max
                 value = current?.coerceIn(min, max) ?: min
                 wrapSelectorWheel = false
-                setBackgroundColor(context.getThemeColor(android.R.attr.colorBackground))
             }
 
             AlertDialog.Builder(context)
@@ -343,22 +362,11 @@ class WinesFragment : Fragment() {
                 .show()
         }
 
-        fun showYearPicker(context: Context, onYearSelected: (Int) -> Unit) {
-            val calendar = Calendar.getInstance()
-            val currentYear = calendar.get(Calendar.YEAR)
-            val numberPicker = NumberPicker(context).apply {
-                minValue = 1900
-                maxValue = currentYear
-                value = currentYear
-                wrapSelectorWheel = false
+        fun showYearPicker(context: Context) {
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            showNumberPicker(context, 1900, currentYear, filter.year) { selectedYear ->
+                yearTextView.text = selectedYear.toString()
             }
-
-            AlertDialog.Builder(context)
-                .setTitle("Select Year")
-                .setView(numberPicker)
-                .setPositiveButton("OK") { _, _ -> onYearSelected(numberPicker.value) }
-                .setNegativeButton("Cancel", null)
-                .show()
         }
 
         minPriceButton.setOnClickListener {
@@ -394,9 +402,7 @@ class WinesFragment : Fragment() {
         }
 
         yearPickerButton.setOnClickListener {
-            showYearPicker(requireContext()) { selectedYear ->
-                yearTextView.text = selectedYear.toString()
-            }
+            showYearPicker(requireContext())
         }
 
         dialogView.findViewById<Button>(R.id.applyFilterButton).setOnClickListener {
@@ -410,8 +416,14 @@ class WinesFragment : Fragment() {
             val yearText = yearTextView.text.toString().toIntOrNull()
             val yearChecked = yearCheckBox.isChecked
 
-            val vineyard = vineyardEditText.text.toString().takeIf { it.isNotEmpty() }
+            val vineyard = vineyardSpinner.selectedItem?.toString()
             val vineyardChecked = vineyardCheckBox.isChecked
+
+            val region = regionSpinner.selectedItem?.toString()
+            val regionChecked = regionCheckBox.isChecked
+
+            val country = countrySpinner.selectedItem?.toString()
+            val countryChecked = countryCheckBox.isChecked
 
             val minRating = minRatingButton.text.toString().toDoubleOrNull()
             val maxRating = maxRatingButton.text.toString().toDoubleOrNull()
@@ -423,6 +435,8 @@ class WinesFragment : Fragment() {
                 maxPrice = if (priceChecked) maxPrice else null,
                 type = if (typeChecked) type else null,
                 vineyard = if (vineyardChecked) vineyard else null,
+                region = if (regionChecked) region else null,
+                country = if (countryChecked) country else null,
                 minRating = if (ratingChecked) minRating else null,
                 maxRating = if (ratingChecked) maxRating else null
             )
@@ -431,7 +445,7 @@ class WinesFragment : Fragment() {
             dialog.dismiss()
         }
 
-        dialogView.findViewById<Button>(R.id.clearFiltersButton).setOnClickListener{
+        dialogView.findViewById<Button>(R.id.clearFiltersButton).setOnClickListener {
             filter = Filter()
             filterWines(filter)
             dialog.dismiss()

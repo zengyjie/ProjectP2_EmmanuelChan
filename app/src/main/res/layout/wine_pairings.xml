@@ -1,47 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/colorBackground"
-    android:orientation="vertical"
-    android:padding="24dp">
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/winePairingsNameTextView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:colorBackground"
+    android:padding="16dp"
+    android:scrollbarSize="0dp">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:text="Pairings for [Wine Name]"
-        android:textAlignment="center"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="24sp" />
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <EditText
-        android:id="@+id/winePairingsEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/edit_text_box"
-        android:gravity="start|top"
-        android:hint="No pairings available"
-        android:inputType="textMultiLine"
-        android:minHeight="100dp"
-        android:padding="12dp"
-        android:text="[Item 1]\n[item 2]" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/winePairingsNameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="Pairings for [Wine Name]"
+            android:textAlignment="center"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="24sp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/revertPairingsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#00FFFFFF"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text="revert"
-        android:textAllCaps="true"
-        android:textColor="?attr/colorOnPrimary"
-        android:textSize="14sp"
-        app:backgroundTint="#00FFFFFF"
-        app:cornerRadius="4dp" />
+        <EditText
+            android:id="@+id/winePairingsEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/edit_text_box"
+            android:gravity="start|top"
+            android:hint="No pairings available"
+            android:inputType="textMultiLine"
+            android:minHeight="100dp"
+            android:padding="12dp"
+            android:text="[Item 1]\n[item 2]" />
 
-</LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/revertPairingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="revert"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="14sp"
+            app:backgroundTint="#00FFFFFF"
+            app:cornerRadius="4dp" />
+
+    </LinearLayout>
+</ScrollView>

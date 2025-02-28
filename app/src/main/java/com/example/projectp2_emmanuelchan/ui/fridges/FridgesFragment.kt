@@ -275,6 +275,7 @@ class FridgesFragment : Fragment() {
         var type: String = "Type",
         var vineyard: String = "Vineyard",
         var region: String = "Region",
+        var country: String = "Country",
         var grapeVariety: String = "Variety",
         var rating: Double = 50.0,
         var pairings: String = "",
