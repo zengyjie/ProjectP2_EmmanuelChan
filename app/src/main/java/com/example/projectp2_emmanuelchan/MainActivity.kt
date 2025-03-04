@@ -13,7 +13,11 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.projectp2_emmanuelchan.databinding.ActivityMainBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Fridge
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Wine
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
+//todo gallery, drunk, regex, animations, firebase, formatPicture, fridgeHint <-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -46,6 +50,7 @@ class MainActivity : AppCompatActivity() {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
         }
+        extractAssets()
 
         super.onCreate(savedInstanceState)
 
@@ -74,4 +79,39 @@ class MainActivity : AppCompatActivity() {
         }
         return super.dispatchTouchEvent(event)
     }
+
+    private fun extractAssets() {
+        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val isFirstRun = sharedPreferences.getBoolean("first_run", true)
+        if (!isFirstRun) return
+
+        val assetManager = assets
+        val files = assetManager.list("wineImages") ?: return
+
+        val internalStorageDir = File(filesDir, "WineWise")
+        if (!internalStorageDir.exists()) {
+            internalStorageDir.mkdirs()
+        }
+
+        val jpgFiles = files.filter { it.endsWith(".jpg", ignoreCase = true) }
+
+        for (fileName in jpgFiles) {
+            val outFile = File(internalStorageDir, fileName)
+            println("Output file: $outFile")
+            if (!outFile.exists()) {
+                try {
+                    assetManager.open("wineImages/$fileName").use { inputStream ->
+                        FileOutputStream(outFile).use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        sharedPreferences.edit().putBoolean("first_run", false).apply()
+    }
+
 }

@@ -146,7 +146,7 @@ class WinesFragment : Fragment() {
 
         dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = "${wine.name}\n(${wine.year})"
         dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
-            "${wine.vineyard}\n${wine.type} wine from ${wine.region}, ${wine.country}\nVariety: ${wine.grapeVariety}\nRating: " +
+            "${wine.vineyard}\n${wine.type} Wine from ${wine.region}, ${wine.country}\nVariety: ${wine.grapeVariety}\nRating: " +
             "${wine.rating} / 100\nNotes:\n${wine.description}\nDrink by: ${wine.drinkBy}\nBought at: $${wine.price}"
 
         dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
@@ -202,7 +202,7 @@ class WinesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
-            editWine(requireContext(), wine, cameraLauncher, capturedImage, permissionLauncher, allWinesAdapter)
+            editWine(requireContext(), wine, cameraLauncher, capturedImage, permissionLauncher, adapter2 = allWinesAdapter)
         }
 
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
@@ -242,18 +242,21 @@ class WinesFragment : Fragment() {
             }
         }
 
-        fun getPairingSuggestion(context: Context, variety: String): String {
+        fun getPairingSuggestion(context: Context, grapeVariety: String): String {
             return try {
-                val jsonString = context.assets.open("pairings.json").bufferedReader().use { it.readText() }
+                val inputStream = context.assets.open("pairings.json")
+                val jsonString = inputStream.bufferedReader().use { it.readText() }
+                val pairingsMap: Map<String, String> = Gson().fromJson(jsonString, object : TypeToken<Map<String, String>>() {}.type)
+                val varieties = grapeVariety.split(",").map { it.trim() }
 
-                val jsonMap: Map<String, String> = Gson().fromJson(jsonString, object : TypeToken<Map<String, String>>() {}.type)
-
-                jsonMap[variety] ?: ""
+                val matchedPairings = varieties.mapNotNull { pairingsMap[it] }
+                if (matchedPairings.isNotEmpty()) { matchedPairings.joinToString("") } else { "" }
             } catch (e: Exception) {
                 e.printStackTrace()
                 ""
             }
         }
+
     }
 
     //filtering

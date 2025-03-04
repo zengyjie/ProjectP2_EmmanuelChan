@@ -1,5 +1,13 @@
 {
-  "Cabernet Sauvignon": "Pairs well with:\ngrilled steak\naged cheeses",
-  "Chardonnay": "Pairs well with:\nseafood\npoultry\ncreamy sauces",
-  "Merlot": "Pairs well with:\nroasted meats\nsoft cheeses"
+  "Cabernet Sauvignon": "grilled steak\naged cheeses\nroast duck\ntruffle pasta\n",
+  "Merlot": "roasted meats\nsoft cheeses\nbraised short ribs\ndark chocolate dessert\n",
+  "Cabernet Franc": "wild mushroom risotto\ngrilled lamb\naged cheese\n",
+  "Pinot Noir": "duck confit\nfoie gras\nfine aged cheeses\n",
+  "Sauvignon Blanc": "oysters\ngoat cheese salad\nlemon chicken\n",
+  "Shiraz": "barbecued meats\npepper steak\naged cheddar\n",
+  "Touriga Nacional": "dark chocolate\nblue cheese\nnutty desserts\n",
+  "Touriga Franca": "dark chocolate\nblue cheese\nnutty desserts\n",
+  "Furmint": "crème brûlée\nfruit tart\naged gouda\n",
+  "Harslevelu": "crème brûlée\nfruit tart\naged gouda\n",
+  "Sémillon": "foie gras\nblue cheese\nfresh figs\n"
 }

@@ -10,8 +10,8 @@
 
     <ImageView
         android:id="@+id/wineImageView"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?android:attr/colorBackground"
         android:scaleType="centerCrop"
         app:srcCompat="@drawable/bottle_front"

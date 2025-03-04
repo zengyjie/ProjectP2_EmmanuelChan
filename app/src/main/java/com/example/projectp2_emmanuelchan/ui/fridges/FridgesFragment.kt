@@ -54,6 +54,7 @@ class FridgesFragment : Fragment() {
 
             val gson = Gson()
             val json = gson.toJson(fridges)
+            println(json)
 
             editor.putString("fridges_data", json)
             editor.apply()
