@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.origSelectedFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
@@ -47,29 +48,39 @@ class FridgesFragment : Fragment() {
             context.startActivity(intent)
         }
 
-
-         fun saveFridges(context: Context) {
-            val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-            val editor = sharedPreferences.edit()
-
+        private fun saveToFile(context: Context, fileName: String, data: Any) {
             val gson = Gson()
-            val json = gson.toJson(fridges)
-            println(json)
+            val jsonString = gson.toJson(data)
 
-            editor.putString("fridges_data", json)
-            editor.apply()
-        }
-
-         fun loadFridges(context: Context) {
-            val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-            val json = sharedPreferences.getString("fridges_data", null)
-
-            if (json != null) {
-                val gson = Gson()
-                val type = object : TypeToken<MutableList<Fridge>>() {}.type
-                fridges = gson.fromJson(json, type) ?: mutableListOf()
+            try {
+                context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
+                    it.write(jsonString.toByteArray())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
+
+        private fun <T> loadFromFile(context: Context, fileName: String, type: TypeToken<T>): T? {
+            return try {
+                val jsonString = context.openFileInput(fileName).bufferedReader().use { it.readText() }
+                Gson().fromJson(jsonString, type.type)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+
+        fun saveFridges(context: Context) {
+            saveToFile(context, "fridges.json", fridges)
+            saveToFile(context, "drunk_wines.json", drunkWines)
+        }
+
+        fun loadFridges(context: Context) {
+            fridges = loadFromFile(context, "fridges.json", object : TypeToken<MutableList<Fridge>>() {}) ?: mutableListOf()
+            drunkWines = loadFromFile(context, "drunk_wines.json", object : TypeToken<MutableList<Wine>>() {}) ?: mutableListOf()
+        }
+
     }
 
     private lateinit var fridgeAdapter: FridgeAdapter
@@ -104,6 +115,9 @@ class FridgesFragment : Fragment() {
             }
             fridgeToOpen = null
         }
+
+        if (fridges.isEmpty()) { binding.noFridgesTextView.visibility = View.VISIBLE }
+
         return root
     }
 
@@ -113,7 +127,7 @@ class FridgesFragment : Fragment() {
     }
 
     //functions
-    fun showAddFridgePopup() {
+    private fun showAddFridgePopup() {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.add_fridge, null)
         val dialogBuilder = AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -122,13 +136,13 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val fridge = readFridgeData(dialogView)
-            if (!fridge.name.startsWith("InvalidName")) { addFridge(fridge) } else { return@setOnClickListener }
+            if (!(fridge.name == "InvalidName" || fridge.name == "drunk")) { addFridge(fridge) } else { return@setOnClickListener }
             dialog.dismiss()
         }
         dialog.show()
     }
 
-    fun showEditFridgePopup(fridge: Fridge) {
+    private fun showEditFridgePopup(fridge: Fridge) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.add_fridge, null)
         val dialogBuilder = AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -194,32 +208,52 @@ class FridgesFragment : Fragment() {
         return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
     }
 
-    fun addFridge(fridge: Fridge) {
+    private fun addFridge(fridge: Fridge) {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
         fridges.add(fridge)
         fridge.wines = initWineArray(fridge.depth, fridge.sections, fridge.rps, fridge.columns)
         fridgeAdapter.notifyDataSetChanged()
+        binding.noFridgesTextView.visibility = View.GONE
     }
 
-    fun removeFridge(fridge: Fridge) {
+    private fun removeFridge(fridge: Fridge) {
         fridges.remove(fridge)
         fridgeAdapter.notifyDataSetChanged()
+        if (fridges.isEmpty()) { binding.noFridgesTextView.visibility = View.VISIBLE }
     }
 
-    fun editFridge(fridge: Fridge, newFridge: Fridge) {
+    private fun editFridge(fridge: Fridge, newFridge: Fridge) {
         fridge.name = newFridge.name
         fridge.icon = newFridge.icon
-        fridge.sections = newFridge.sections
-        fridge.columns = newFridge.columns
-        fridge.rps = newFridge.rps
-        fridge.depth = newFridge.depth
         fridge.capacity = newFridge.capacity
-        resizeWinesArray(fridge, newFridge.depth, newFridge.sections, newFridge.rps, newFridge.columns)
+        if ((newFridge.depth != fridge.depth) || (newFridge.sections != fridge.sections) ||
+            (newFridge.rps != fridge.rps) || (newFridge.columns != fridge.columns)) {
+            val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+            val confirmDialogBuilder = AlertDialog.Builder(requireContext())
+                .setView(confirmDeleteView)
+            val deleteDialog = confirmDialogBuilder.create()
+
+            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Resize ${fridge.name}? Some wines may be lost!"
+
+            confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                fridge.sections = newFridge.sections
+                fridge.columns = newFridge.columns
+                fridge.rps = newFridge.rps
+                fridge.depth = newFridge.depth
+                resizeWinesArray(fridge, newFridge.depth, newFridge.sections, newFridge.rps, newFridge.columns)
+            }
+
+            confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                deleteDialog.dismiss()
+            }
+
+            deleteDialog.show()
+        }
         fridgeAdapter.notifyDataSetChanged()
     }
 
-    fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
+    private fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
         val oldWines = fridge.wines
 
         val newWines = MutableList(newDepth) { layer -> MutableList(newSections) { section -> MutableList(newRows) { row -> MutableList(newColumns) { column ->
@@ -233,7 +267,7 @@ class FridgesFragment : Fragment() {
         fridge.wines = newWines
     }
 
-    fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
+    private fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
         val nameEditText = dialogView.findViewById<EditText>(R.id.searchBar)
         var name = nameEditText?.text.toString().trim()
 
