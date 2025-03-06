@@ -104,6 +104,18 @@ class FridgesFragment : Fragment() {
             }
             fridgeToOpen = null
         }
+
+        addFridge(Fridge(
+            name = "drunk",
+            icon = R.drawable.fridge_1_icon,
+            sections = 2,
+            columns = 2,
+            rps = 2,
+            depth = 2
+        ))
+        if (fridges.size == 1) { binding.noFridgesTextView.visibility = View.VISIBLE }
+        else { binding.noFridgesTextView.visibility = View.GONE }
+
         return root
     }
 
@@ -122,7 +134,7 @@ class FridgesFragment : Fragment() {
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val fridge = readFridgeData(dialogView)
-            if (!fridge.name.startsWith("InvalidName")) { addFridge(fridge) } else { return@setOnClickListener }
+            if (!(fridge.name == "InvalidName" || fridge.name == "drunk")) { addFridge(fridge) } else { return@setOnClickListener }
             dialog.dismiss()
         }
         dialog.show()
@@ -187,27 +199,30 @@ class FridgesFragment : Fragment() {
         var rps: Int = 1,
         var depth: Int = 1,
         var capacity: Int = sections * rps * columns * depth,
-        var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf()
+        var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf(),
+        var counter: Int = 0
     ) : Serializable
 
     private fun initWineArray(depth: Int, sections: Int, rps: Int, columns: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
         return MutableList(depth) { MutableList(sections) { MutableList(rps) { MutableList(columns) { Wine() } } } }
     }
 
-    fun addFridge(fridge: Fridge) {
+    private fun addFridge(fridge: Fridge) {
         if (fridges.contains(fridge)) { return }
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
         fridges.add(fridge)
         fridge.wines = initWineArray(fridge.depth, fridge.sections, fridge.rps, fridge.columns)
+        binding.noFridgesTextView.visibility = View.GONE
         fridgeAdapter.notifyDataSetChanged()
     }
 
-    fun removeFridge(fridge: Fridge) {
+    private fun removeFridge(fridge: Fridge) {
         fridges.remove(fridge)
         fridgeAdapter.notifyDataSetChanged()
+        if (fridges.size == 1) { binding.noFridgesTextView.visibility = View.VISIBLE }
     }
 
-    fun editFridge(fridge: Fridge, newFridge: Fridge) {
+    private fun editFridge(fridge: Fridge, newFridge: Fridge) {
         fridge.name = newFridge.name
         fridge.icon = newFridge.icon
         fridge.sections = newFridge.sections
@@ -219,7 +234,7 @@ class FridgesFragment : Fragment() {
         fridgeAdapter.notifyDataSetChanged()
     }
 
-    fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
+    private fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
         val oldWines = fridge.wines
 
         val newWines = MutableList(newDepth) { layer -> MutableList(newSections) { section -> MutableList(newRows) { row -> MutableList(newColumns) { column ->
@@ -233,7 +248,7 @@ class FridgesFragment : Fragment() {
         fridge.wines = newWines
     }
 
-    fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
+    private fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
         val nameEditText = dialogView.findViewById<EditText>(R.id.searchBar)
         var name = nameEditText?.text.toString().trim()
 
@@ -284,7 +299,6 @@ class FridgesFragment : Fragment() {
         var description: String = "desc",
         var imagePath: String = "null",
         var parentFridge: String = "New Fridge",
-        var drunk: Boolean = false
     )
 
     //adapter

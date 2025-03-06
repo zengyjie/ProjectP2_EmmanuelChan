@@ -249,10 +249,12 @@ class FridgeActivity : AppCompatActivity() {
                     adapter2?.notifyDataSetChanged()
                     deleteDialog.dismiss()
                     dialog.dismiss()
+                    Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
                 }
 
                 confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
                     deleteDialog.dismiss()
+                    Toast.makeText(context, "cancelled", Toast.LENGTH_SHORT).show()
                 }
 
                 deleteDialog.show()
@@ -606,6 +608,36 @@ class FridgeActivity : AppCompatActivity() {
             dialog1.show()
         }
 
+        dialogView.findViewById<Button>(R.id.markDrunkButton)?.setOnClickListener {
+            selectedWine = wine
+            selectedFridge = fridges[getFridge("drunk")]
+            val indices = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
+            selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine(
+                selectedWine.name,
+                selectedWine.price,
+                selectedWine.year,
+                selectedWine.type,
+                selectedWine.vineyard,
+                selectedWine.region,
+                selectedWine.country,
+                selectedWine.grapeVariety,
+                selectedWine.rating,
+                selectedWine.pairings,
+                selectedWine.drinkBy,
+                selectedWine.description,
+                selectedWine.imagePath,
+                "drunk"
+            )
+            selectedWine = FridgesFragment.Wine()
+            val indices1 = getIndicesFromPosition(position, selectedFridge)
+            fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
+            Toast.makeText(applicationContext, "success", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+            fridges[getFridge("drunk")].counter++
+            println(fridges[getFridge("drunk")].counter)
+            wineRecyclerView.adapter?.notifyDataSetChanged()
+        }
+
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
             editWine(this, wine, cameraLauncher, capturedImage, permissionLauncher, wineRecyclerView.adapter)
@@ -718,7 +750,6 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.description,
             selectedWine.imagePath,
             selectedWine.parentFridge,
-            selectedWine.drunk
         )
         selectedWine = FridgesFragment.Wine()
         if (moveMode == "move") {

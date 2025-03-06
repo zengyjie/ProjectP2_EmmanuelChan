@@ -229,8 +229,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp">
+        android:paddingTop="12dp">
 
         <TextView
             android:layout_width="0dp"
@@ -280,6 +279,28 @@
 
         <CheckBox
             android:id="@+id/priceCheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Search drunk wines"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+
+        <CheckBox
+            android:id="@+id/drunkCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
