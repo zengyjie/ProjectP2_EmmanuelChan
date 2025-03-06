@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo gallery, drunk <- broken!!, regex, animations, firebase, formatPicture/card
+//todo gallery, drunk, regex, animations, firebase, formatPicture, fridgeHint <-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
