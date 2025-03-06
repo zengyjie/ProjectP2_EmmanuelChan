@@ -18,6 +18,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
@@ -260,6 +261,12 @@ class FridgeActivity : AppCompatActivity() {
                 deleteDialog.show()
             }
 
+            dialogView.setOnTouchListener { _, _ ->
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
+                false
+            }
+
             dialog.show()
         }
     }
@@ -288,8 +295,11 @@ class FridgeActivity : AppCompatActivity() {
         val movingButtonsLayout = binding.movingButtonsLayout
         if (moving) {
             var text = ""
-            if (moveMode == "move") { text = "Moving \"${selectedWine.name}\"" }
-            else { text = "Duplicate \"${selectedWine.name}\"" }
+            when (moveMode) {
+                "move" -> { text = "Moving \"${selectedWine.name}\"" }
+                "duplicate" -> { text = "Duplicate \"${selectedWine.name}\"" }
+                "putBack" -> { text = "Putting back \"${selectedWine.name}\"" }
+            }
             movingTextView.text = text
             movingTextView.visibility = View.VISIBLE
             movingButtonsLayout.visibility = View.VISIBLE
@@ -440,6 +450,12 @@ class FridgeActivity : AppCompatActivity() {
             showManualAddWineDialog(index, cameraLauncher, permissionLauncher)
         }
 
+        dialogView.setOnTouchListener { _, _ ->
+            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
+            false
+        }
+
         dialog.show()
     }
 
@@ -544,6 +560,12 @@ class FridgeActivity : AppCompatActivity() {
             wineRecyclerView.adapter?.notifyDataSetChanged()
         }
 
+        dialogView.setOnTouchListener { _, _ ->
+            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
+            false
+        }
+
         dialog.show()
     }
 
@@ -630,7 +652,7 @@ class FridgeActivity : AppCompatActivity() {
             )
             selectedWine = FridgesFragment.Wine()
             val indices1 = getIndicesFromPosition(position, selectedFridge)
-            fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
+            fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices1[1]][indices1[2]][indices1[3]] = FridgesFragment.Wine()
             Toast.makeText(applicationContext, "success", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
             fridges[getFridge("drunk")].counter++
@@ -752,9 +774,15 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.parentFridge,
         )
         selectedWine = FridgesFragment.Wine()
-        if (moveMode == "move") {
-            origSelectedFridge.wines [selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
-        } else { moveMode = "move" }
+        when (moveMode) {
+            "move" -> origSelectedFridge.wines[selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] = FridgesFragment.Wine()
+            "putBack" -> {
+                fridges[getFridge("drunk")].wines[selectedIndices[0]][selectedIndices[1]][selectedIndices[2]][selectedIndices[3]] =
+                    FridgesFragment.Wine()
+                moveMode = "move"
+            }
+            "duplicate" ->  moveMode = "move"
+        }
         binding.movingTextView.visibility = View.GONE
         binding.cancelMoveButton.visibility = View.GONE
         binding.changeFridgeButton.visibility = View.GONE

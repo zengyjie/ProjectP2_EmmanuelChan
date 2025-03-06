@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo gallery, drunk, regex, animations, firebase, formatPicture, fridgeHint <-
+//todo gallery <- regex, firebase, formatPicture
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -33,12 +33,10 @@ class MainActivity : AppCompatActivity() {
         var origSelectedFridge: Fridge = Fridge()
 
         fun getFridge(name: String): Int {
-            var i = 0
-            for (f in fridges) {
-                if (f.name.equals(name)) {
+            for ((i, f) in fridges.withIndex()) {
+                if (f.name == name) {
                     return i
                 }
-                i++
             }
             return -1
         }

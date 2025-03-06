@@ -59,17 +59,18 @@ class SettingsFragment : Fragment() {
             confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
 
             confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
-                val wineWiseDir = File(context?.filesDir, "WineWise")
+                val wineWiseDir = File(requireContext().filesDir, "WineWise")
                 if (wineWiseDir.exists() && wineWiseDir.isDirectory) {
-                    val files = wineWiseDir.listFiles()
-                    files?.forEach { it.delete() }
+                    wineWiseDir.listFiles()?.forEach { file ->
+                        if (!file.delete()) { file.deleteOnExit() }
+                    }
                 }
                 fridges.clear()
-                val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-                sharedPreferences.edit().remove("fridges_data").apply()
+                sharedPreferences.edit().clear().apply()
                 deleteDialog.dismiss()
-                Toast.makeText(context, "Cleared data", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "All data cleared successfully", Toast.LENGTH_SHORT).show()
             }
+
 
             confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
                 deleteDialog.dismiss()

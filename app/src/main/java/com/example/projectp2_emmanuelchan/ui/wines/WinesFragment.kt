@@ -38,13 +38,17 @@ import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.selectedImage
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.moveMode
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.moving
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedIndices
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeToOpen
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.resizeWinesArray
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.saveFridges
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.gson.Gson
@@ -95,9 +99,10 @@ class WinesFragment : Fragment() {
         allWinesAdapter = AllWinesAdapter(allWinesFiltered) { wine ->
             val fridge = fridges[getFridge(wine.parentFridge)]
             val indices = findWine(fridge, wine)
-            viewWine(fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]])
+            viewWine(fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]])
         }
         allWinesRecyclerView.adapter = allWinesAdapter
+        filterWines(Filter())
 
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.searchBar.text = null
@@ -173,9 +178,7 @@ class WinesFragment : Fragment() {
                 if (!hasFocus) {
                     wine.pairings = pairingsEditText.text.toString()
                     val indices = findWine(selectedFridge, wine)
-                    if (indices != null) {
-                        selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
-                    }
+                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
                 }
             }
 
@@ -186,13 +189,9 @@ class WinesFragment : Fragment() {
                 if (fridgeIndex != -1) {
                     val fridge = fridges[fridgeIndex]
                     val indices = findWine(fridge, wine)
-
-                    if (indices != null) {
-                        fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
-                    }
+                    fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
                 }
             }
-
 
             revertPairingsButton.setOnClickListener {
                 pairingsEditText.setText(originalPairings)
@@ -202,33 +201,78 @@ class WinesFragment : Fragment() {
             dialog1.show()
         }
 
-        dialogView.findViewById<Button>(R.id.markDrunkButton)?.setOnClickListener {
-            selectedWine = wine
-            selectedFridge = fridges[getFridge("drunk")]
-            val indices = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
-            selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine(
-                selectedWine.name,
-                selectedWine.price,
-                selectedWine.year,
-                selectedWine.type,
-                selectedWine.vineyard,
-                selectedWine.region,
-                selectedWine.country,
-                selectedWine.grapeVariety,
-                selectedWine.rating,
-                selectedWine.pairings,
-                selectedWine.drinkBy,
-                selectedWine.description,
-                selectedWine.imagePath,
-                "drunk"
-            )
-            selectedWine = FridgesFragment.Wine()
-            val indices1 = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
-            fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
-            Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-            fridges[getFridge("drunk")].counter++
-            binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+        val markDrunkButton = dialogView.findViewById<Button>(R.id.markDrunkButton)
+        if (wine.parentFridge == "drunk") { markDrunkButton.text = "mark undrunk" }
+        markDrunkButton.setOnClickListener {
+            if (wine.parentFridge == "drunk") {
+                moving = true
+                selectedWine = wine
+                val dialogView1 =
+                    LayoutInflater.from(requireContext()).inflate(R.layout.select_fridge, null)
+                val dialogBuilder1 = AlertDialog.Builder(requireContext()).setView(dialogView1)
+                val dialog1 = dialogBuilder1.create()
+
+                val fridgeSpinner = dialogView1.findViewById<Spinner>(R.id.selectFridgeSpinner)
+                val openChangedFridgeButton =
+                    dialogView1.findViewById<Button>(R.id.openChangedFridgeButton)
+
+                val availableFridges = fridges.filter { it.name != selectedFridge.name }
+
+                val fridgeNames = availableFridges.map { it.name }
+                val adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_spinner_dropdown_item,
+                    fridgeNames
+                )
+                fridgeSpinner.adapter = adapter
+
+                openChangedFridgeButton.setOnClickListener {
+                    val selectedFridgeName = fridgeSpinner.selectedItem?.toString()
+                    val selectedFridge = fridges[getFridge(selectedFridgeName ?: "")]
+                    selectedIndices = findWine(fridges[getFridge("drunk")], wine).toMutableList()
+                    if (selectedFridge.name != "null") {
+                        moveMode = "putBack"
+                        FridgesFragment.openFridge(selectedFridge, requireContext())
+                        dialog1.dismiss()
+                    } else {
+                        Toast.makeText(context, "Invalid selection", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                dialog1.show()
+
+                dialog.dismiss()
+            } else {
+                selectedWine = wine
+                selectedFridge = fridges[getFridge("drunk")]
+                val indices = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
+                selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] =
+                    FridgesFragment.Wine(
+                        selectedWine.name,
+                        selectedWine.price,
+                        selectedWine.year,
+                        selectedWine.type,
+                        selectedWine.vineyard,
+                        selectedWine.region,
+                        selectedWine.country,
+                        selectedWine.grapeVariety,
+                        selectedWine.rating,
+                        selectedWine.pairings,
+                        selectedWine.drinkBy,
+                        selectedWine.description,
+                        selectedWine.imagePath,
+                        "drunk"
+                    )
+                selectedWine = FridgesFragment.Wine()
+                val indices1 = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
+                fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices[1]][indices[2]][indices[3]] =
+                    FridgesFragment.Wine()
+                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                val drunkFridge = fridges[getFridge("drunk")]
+                drunkFridge.counter++
+                resizeWinesArray(drunkFridge, 1, drunkFridge.sections + 1, 1, 1)
+                binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+            }
         }
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
@@ -239,6 +283,7 @@ class WinesFragment : Fragment() {
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
+        if (wine.parentFridge == "drunk") { moveButton.visibility = View.GONE }
         moveButton.text = "locate"
         moveButton.setOnClickListener {
             dialog.dismiss()
@@ -246,13 +291,13 @@ class WinesFragment : Fragment() {
             highlightedWineName = wine.name
             val navView = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
             navView.selectedItemId = R.id.navigation_fridges
-            itemLayer = findWine(fridgeToOpen!!, wine)?.get(0) ?: 3
+            itemLayer = findWine(fridgeToOpen!!, wine)[0]
         }
         dialog.show()
     }
 
     companion object {
-        fun findWine(fridge: FridgesFragment.Fridge, targetWine: FridgesFragment.Wine) : List<Int>? {
+        fun findWine(fridge: FridgesFragment.Fridge, targetWine: FridgesFragment.Wine) : List<Int> {
             for (l in fridge.wines.indices) {
                 for (s in fridge.wines[l].indices) {
                     for (r in fridge.wines[l][s].indices) {
@@ -494,15 +539,9 @@ class WinesFragment : Fragment() {
         dialog.show()
     }
 
-    fun Context.getThemeColor(attr: Int): Int {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(attr, typedValue, true)
-        return typedValue.data
-    }
-
     override fun onResume() {
         super.onResume()
-        allWinesAdapter.notifyDataSetChanged()
+        binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
     }
 
     //adapter
