@@ -34,7 +34,6 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
@@ -602,13 +601,22 @@ class FridgeActivity : AppCompatActivity() {
         }
 
         dialogView.findViewById<Button>(R.id.markDrunkButton)?.setOnClickListener {
+            fun findEmptySpace(fridge: FridgesFragment.Fridge, wine: FridgesFragment.Wine) {
+                for (l in fridge.wines.indices) {
+                    for (s in fridge.wines[l].indices) {
+                        for (r in fridge.wines[l][s].indices) {
+                            for (c in fridge.wines[l][s][r].indices) {
+                                if (fridge.wines[l][s][r][c].name == "null") {
+                                    fridge.wines[l][s][r][c] = wine
+                                    return
+                                } } } } } }
+
             val indices = findWine(selectedFridge, wine)
             if (indices != null) {
                 selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
             }
-            wine.drunk = true
             wine.parentFridge = "drunk"
-            drunkWines.add(wine)
+            findEmptySpace(fridges[getFridge("drunk")], wine)
             wineRecyclerView.adapter?.notifyDataSetChanged()
             dialog.dismiss()
             Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
@@ -726,7 +734,6 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine.description,
             selectedWine.imagePath,
             selectedWine.parentFridge,
-            selectedWine.drunk
         )
         selectedWine = FridgesFragment.Wine()
         if (moveMode == "move") {

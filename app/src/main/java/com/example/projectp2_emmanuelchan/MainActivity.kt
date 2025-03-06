@@ -28,18 +28,15 @@ class MainActivity : AppCompatActivity() {
         var selectedWine = Wine()
         var selectedIndices = mutableListOf(0, 0, 0, 0)
         var fridges = mutableListOf<Fridge>()
-        var drunkWines = mutableListOf<Wine>()
         var highlightedWineName: String = "null"
         var selectedFridge: Fridge = Fridge()
         var origSelectedFridge: Fridge = Fridge()
 
         fun getFridge(name: String): Int {
-            var i = 0
-            for (f in fridges) {
-                if (f.name.equals(name)) {
+            for ((i, f) in fridges.withIndex()) {
+                if (f.name == name) {
                     return i
                 }
-                i++
             }
             return -1
         }
