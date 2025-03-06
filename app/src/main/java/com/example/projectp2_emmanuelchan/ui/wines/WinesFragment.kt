@@ -10,6 +10,7 @@ import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,9 +32,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.editWine
-import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.getIndicesFromPosition
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImage
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.selectedImageView
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
@@ -87,13 +88,19 @@ class WinesFragment : Fragment() {
                             if (wine.name != "null") { allWines.add(wine) }
                         } } } } }
 
+        for (wine in drunkWines) { allWines.add(wine) }
+
         val allWinesFiltered = allWines
         val allWinesRecyclerView = binding.allWinesRecyclerView
         allWinesRecyclerView.layoutManager = GridLayoutManager(context, 1)
         allWinesAdapter = AllWinesAdapter(allWinesFiltered) { wine ->
-            val fridge = fridges[getFridge(wine.parentFridge)]
-            val indices = findWine(fridge, wine)
-            viewWine(fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]])
+            if (wine.parentFridge == "drunk") {
+                viewWine(drunkWines[drunkWines.indexOf(wine)])
+            } else {
+                val fridge = fridges[getFridge(wine.parentFridge)]
+                val indices = findWine(fridge, wine)
+                viewWine(fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]])
+            }
         }
         allWinesRecyclerView.adapter = allWinesAdapter
 
@@ -199,20 +206,19 @@ class WinesFragment : Fragment() {
         }
 
         val markDrunkButton = dialogView.findViewById<Button>(R.id.markDrunkButton)
-        if (wine.parentFridge == "drunk") { markDrunkButton?.text = "mark undrunk" }
+        if (wine.drunk) { markDrunkButton?.text = "mark undrunk" }
         markDrunkButton?.setOnClickListener {
-            if (wine.parentFridge != "drunk") {//try
-                selectedFridge = fridges[getFridge("drunk")]
-                val fridge = selectedFridge
-                val indices = getIndicesFromPosition(fridge.indexCounter, fridge)
-                fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = selectedWine
-                selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
+            if (wine.drunk) {
+                val indices = findWine(selectedFridge, wine)
+                if (indices != null) {
+                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] =
+                        FridgesFragment.Wine()
+                }
+                wine.drunk = true
                 wine.parentFridge = "drunk"
-                fridge.indexCounter++
-                dialog.dismiss()
-                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
-                binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+                drunkWines.add(wine)
             } else {
+                wine.drunk = false
                 //todo select fridge, moveto fridge
             }
         }
@@ -225,7 +231,7 @@ class WinesFragment : Fragment() {
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
-        if (wine.parentFridge == "drunk") { moveButton.visibility = View.GONE }
+        if (wine.drunk) { moveButton.visibility = View.GONE }
         moveButton.text = "locate"
         moveButton.setOnClickListener {
             dialog.dismiss()
@@ -294,7 +300,7 @@ class WinesFragment : Fragment() {
     )
 
     private fun filterWines(filter: Filter) {
-        var filteredList = allWines.filter { wine ->
+        val filteredList = allWines.filter { wine ->
             (filter.year == null || wine.year == filter.year) &&
                 (filter.minPrice == null || wine.price >= filter.minPrice) &&
                 (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
@@ -304,12 +310,8 @@ class WinesFragment : Fragment() {
                 (filter.country.isNullOrEmpty() || wine.parentFridge.contains(filter.country, ignoreCase = true)) &&
                 (filter.minRating == null || wine.rating >= filter.minRating) &&
                 (filter.maxRating == null || wine.rating <= filter.maxRating) &&
-                (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true))
-        }
-        filteredList = if (filter.drunk) {
-            filteredList.filter { wine -> wine.parentFridge == "drunk" }
-        } else {
-            filteredList.filter { wine -> wine.parentFridge != "drunk" }
+                (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true) &&
+                (filter.drunk == wine.drunk))
         }
 
         allWinesAdapter.updateList(filteredList)

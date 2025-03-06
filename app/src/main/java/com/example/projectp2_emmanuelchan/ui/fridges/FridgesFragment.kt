@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity
+import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.origSelectedFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
@@ -72,10 +73,12 @@ class FridgesFragment : Fragment() {
 
         fun saveFridges(context: Context) {
             saveToFile(context, "fridges.json", fridges)
+            saveToFile(context, "drunk_wines.json", drunkWines)
         }
 
         fun loadFridges(context: Context) {
             fridges = loadFromFile(context, "fridges.json", object : TypeToken<MutableList<Fridge>>() {}) ?: mutableListOf()
+            drunkWines = loadFromFile(context, "drunk_wines.json", object : TypeToken<MutableList<Wine>>() {}) ?: mutableListOf()
         }
 
     }
@@ -94,7 +97,7 @@ class FridgesFragment : Fragment() {
         fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
-        fridgeAdapter = FridgeAdapter(fridges.filter { it.name != "drunk" }, { fridge ->
+        fridgeAdapter = FridgeAdapter(fridges, { fridge ->
             origSelectedFridge = fridge
             openFridge(fridge, requireContext()) },
             { fridge -> showEditFridgePopup(fridge) })
@@ -113,10 +116,7 @@ class FridgesFragment : Fragment() {
             fridgeToOpen = null
         }
 
-        addFridge(Fridge(name="drunk", sections=9999, rps=9999, columns=9999, depth=2))
-
-        if (fridges.size == 1) { binding.noFridgesTextView.visibility = View.VISIBLE }
-        else { binding.noFridgesTextView.visibility = View.GONE }
+        if (fridges.isEmpty()) { binding.noFridgesTextView.visibility = View.VISIBLE }
 
         return root
     }
@@ -191,7 +191,7 @@ class FridgesFragment : Fragment() {
             Toast.makeText(it, message, Toast.LENGTH_SHORT).show()
         }
     }
-    //todo:refresh
+
     //Fridge class
     data class Fridge (
         var name: String = "New fridge",
@@ -201,8 +201,7 @@ class FridgesFragment : Fragment() {
         var rps: Int = 1,
         var depth: Int = 1,
         var capacity: Int = sections * rps * columns * depth,
-        var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf(),
-        var indexCounter: Int = 0
+        var wines: MutableList<MutableList<MutableList<MutableList<Wine>>>> = mutableListOf()
     ) : Serializable
 
     private fun initWineArray(depth: Int, sections: Int, rps: Int, columns: Int): MutableList<MutableList<MutableList<MutableList<Wine>>>> {
@@ -214,14 +213,14 @@ class FridgesFragment : Fragment() {
         if (fridges.any { it.name.equals(fridge.name, ignoreCase = true) }) { return }
         fridges.add(fridge)
         fridge.wines = initWineArray(fridge.depth, fridge.sections, fridge.rps, fridge.columns)
-        fridgeRecyclerView.adapter?.notifyDataSetChanged()
+        fridgeAdapter.notifyDataSetChanged()
         binding.noFridgesTextView.visibility = View.GONE
     }
 
     private fun removeFridge(fridge: Fridge) {
         fridges.remove(fridge)
-        fridgeRecyclerView.adapter?.notifyDataSetChanged()
-        if (fridges.size == 1) { binding.noFridgesTextView.visibility = View.VISIBLE }
+        fridgeAdapter.notifyDataSetChanged()
+        if (fridges.isEmpty()) { binding.noFridgesTextView.visibility = View.VISIBLE }
     }
 
     private fun editFridge(fridge: Fridge, newFridge: Fridge) {
@@ -251,7 +250,7 @@ class FridgesFragment : Fragment() {
 
             deleteDialog.show()
         }
-        fridgeRecyclerView.adapter?.notifyDataSetChanged()
+        fridgeAdapter.notifyDataSetChanged()
     }
 
     private fun resizeWinesArray(fridge: Fridge, newDepth: Int, newSections: Int, newRows: Int, newColumns: Int) {
@@ -319,6 +318,7 @@ class FridgesFragment : Fragment() {
         var description: String = "desc",
         var imagePath: String = "null",
         var parentFridge: String = "New Fridge",
+        var drunk: Boolean = false
     )
 
     //adapter
