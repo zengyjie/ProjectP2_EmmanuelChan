@@ -34,7 +34,6 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
@@ -361,7 +360,11 @@ class FridgeActivity : AppCompatActivity() {
 
         fun updateSearchResults(query: String) {
             searchResultsLayout.removeAllViews()
-            searchResultsLayout.visibility = View.VISIBLE
+            if (query.isEmpty()) {
+                searchResultsLayout.visibility = View.GONE
+                return
+            }
+
             val filteredWines = wineList.filter { it.name.contains(query, ignoreCase = true) }
             if (filteredWines.isEmpty()) {
                 return
@@ -391,7 +394,9 @@ class FridgeActivity : AppCompatActivity() {
         }
 
         wineNameInput.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) { updateSearchResults(s.toString()) }
+            override fun afterTextChanged(s: Editable?) {
+                updateSearchResults(s.toString())
+            }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
@@ -599,19 +604,6 @@ class FridgeActivity : AppCompatActivity() {
             }
 
             dialog1.show()
-        }
-
-        dialogView.findViewById<Button>(R.id.markDrunkButton)?.setOnClickListener {
-            val indices = findWine(selectedFridge, wine)
-            if (indices != null) {
-                selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
-            }
-            wine.drunk = true
-            wine.parentFridge = "drunk"
-            drunkWines.add(wine)
-            wineRecyclerView.adapter?.notifyDataSetChanged()
-            dialog.dismiss()
-            Toast.makeText(this, "success", Toast.LENGTH_SHORT).show()
         }
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {

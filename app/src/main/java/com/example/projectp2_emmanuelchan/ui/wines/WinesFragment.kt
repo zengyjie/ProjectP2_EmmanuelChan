@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.editWine
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImage
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.selectedImageView
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.drunkWines
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.highlightedWineName
@@ -85,22 +84,17 @@ class WinesFragment : Fragment() {
                     for (r in fridge.wines[l][s].indices) {
                         for (c in fridge.wines[l][s][r].indices) {
                             val wine = fridge.wines[l][s][r][c]
-                            if (wine.name != "null") { allWines.add(wine) }
-                        } } } } }
-
-        for (wine in drunkWines) { allWines.add(wine) }
+                            if (wine.name != "null") { allWines.add(wine)}
+                        } } } }
+        }
 
         val allWinesFiltered = allWines
         val allWinesRecyclerView = binding.allWinesRecyclerView
         allWinesRecyclerView.layoutManager = GridLayoutManager(context, 1)
         allWinesAdapter = AllWinesAdapter(allWinesFiltered) { wine ->
-            if (wine.parentFridge == "drunk") {
-                viewWine(drunkWines[drunkWines.indexOf(wine)])
-            } else {
-                val fridge = fridges[getFridge(wine.parentFridge)]
-                val indices = findWine(fridge, wine)
-                viewWine(fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]])
-            }
+            val fridge = fridges[getFridge(wine.parentFridge)]
+            val indices = findWine(fridge, wine)
+            viewWine(fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]])
         }
         allWinesRecyclerView.adapter = allWinesAdapter
 
@@ -197,30 +191,13 @@ class WinesFragment : Fragment() {
                 }
             }
 
+
             revertPairingsButton.setOnClickListener {
                 pairingsEditText.setText(originalPairings)
                 wine.pairings = originalPairings
             }
 
             dialog1.show()
-        }
-
-        val markDrunkButton = dialogView.findViewById<Button>(R.id.markDrunkButton)
-        if (wine.drunk) { markDrunkButton?.text = "mark undrunk" }
-        markDrunkButton?.setOnClickListener {
-            if (wine.drunk) {
-                val indices = findWine(selectedFridge, wine)
-                if (indices != null) {
-                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] =
-                        FridgesFragment.Wine()
-                }
-                wine.drunk = true
-                wine.parentFridge = "drunk"
-                drunkWines.add(wine)
-            } else {
-                wine.drunk = false
-                //todo select fridge, moveto fridge
-            }
         }
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
@@ -231,7 +208,6 @@ class WinesFragment : Fragment() {
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
-        if (wine.drunk) { moveButton.visibility = View.GONE }
         moveButton.text = "locate"
         moveButton.setOnClickListener {
             dialog.dismiss()
@@ -295,23 +271,21 @@ class WinesFragment : Fragment() {
         val country: String? = null,
         val minRating: Double? = null,
         val maxRating: Double? = null,
-        var name: String? = null,
-        var drunk: Boolean = false
+        var name: String? = null
     )
 
     private fun filterWines(filter: Filter) {
         val filteredList = allWines.filter { wine ->
             (filter.year == null || wine.year == filter.year) &&
-                (filter.minPrice == null || wine.price >= filter.minPrice) &&
-                (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
-                (filter.type.isNullOrEmpty() || wine.type.equals(filter.type, ignoreCase = true)) &&
-                (filter.vineyard.isNullOrEmpty() || wine.vineyard.contains(filter.vineyard, ignoreCase = true)) &&
-                (filter.region.isNullOrEmpty() || wine.region.contains(filter.region, ignoreCase = true)) &&
-                (filter.country.isNullOrEmpty() || wine.parentFridge.contains(filter.country, ignoreCase = true)) &&
-                (filter.minRating == null || wine.rating >= filter.minRating) &&
-                (filter.maxRating == null || wine.rating <= filter.maxRating) &&
-                (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true) &&
-                (filter.drunk == wine.drunk))
+                    (filter.minPrice == null || wine.price >= filter.minPrice) &&
+                    (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
+                    (filter.type.isNullOrEmpty() || wine.type.equals(filter.type, ignoreCase = true)) &&
+                    (filter.vineyard.isNullOrEmpty() || wine.vineyard.contains(filter.vineyard, ignoreCase = true)) &&
+                    (filter.region.isNullOrEmpty() || wine.region.contains(filter.region, ignoreCase = true)) &&
+                    (filter.country.isNullOrEmpty() || wine.parentFridge.contains(filter.country, ignoreCase = true)) &&
+                    (filter.minRating == null || wine.rating >= filter.minRating) &&
+                    (filter.maxRating == null || wine.rating <= filter.maxRating) &&
+                    (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true))
         }
 
         allWinesAdapter.updateList(filteredList)
@@ -360,7 +334,6 @@ class WinesFragment : Fragment() {
         val minPriceButton = dialogView.findViewById<Button>(R.id.minPriceButton)
         val maxPriceButton = dialogView.findViewById<Button>(R.id.maxPriceButton)
         val priceCheckBox = dialogView.findViewById<CheckBox>(R.id.priceCheckBox)
-        val drunkCheckBox = dialogView.findViewById<CheckBox>(R.id.drunkCheckBox)
 
         minPriceButton.text = filter.minPrice?.toString() ?: "Min"
         maxPriceButton.text = filter.maxPrice?.toString() ?: "Max"
@@ -459,8 +432,6 @@ class WinesFragment : Fragment() {
             val maxRating = maxRatingButton.text.toString().toDoubleOrNull()
             val ratingChecked = ratingCheckBox.isChecked
 
-            val drunkChecked = drunkCheckBox.isChecked
-
             filter = Filter(
                 year = if (yearChecked) yearText else null,
                 minPrice = if (priceChecked) minPrice else null,
@@ -470,8 +441,7 @@ class WinesFragment : Fragment() {
                 region = if (regionChecked) region else null,
                 country = if (countryChecked) country else null,
                 minRating = if (ratingChecked) minRating else null,
-                maxRating = if (ratingChecked) maxRating else null,
-                drunk = drunkChecked
+                maxRating = if (ratingChecked) maxRating else null
             )
 
             filterWines(filter)
@@ -485,6 +455,12 @@ class WinesFragment : Fragment() {
         }
 
         dialog.show()
+    }
+
+    fun Context.getThemeColor(attr: Int): Int {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 
     override fun onResume() {

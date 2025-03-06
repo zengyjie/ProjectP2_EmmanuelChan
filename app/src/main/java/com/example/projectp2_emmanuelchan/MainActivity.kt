@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo gallery, drunk <- broken!!, regex, animations, firebase, formatPicture/card
+//todo gallery, drunk, regex, animations, firebase, formatPicture, fridgeHint <-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
         var selectedWine = Wine()
         var selectedIndices = mutableListOf(0, 0, 0, 0)
         var fridges = mutableListOf<Fridge>()
-        var drunkWines = mutableListOf<Wine>()
         var highlightedWineName: String = "null"
         var selectedFridge: Fridge = Fridge()
         var origSelectedFridge: Fridge = Fridge()
