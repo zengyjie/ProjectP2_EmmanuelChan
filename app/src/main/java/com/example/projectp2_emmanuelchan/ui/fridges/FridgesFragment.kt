@@ -115,9 +115,10 @@ class FridgesFragment : Fragment() {
 
         if (fridgeToOpen != null) {
             val position = fridges.indexOfFirst { it.name == fridgeToOpen!!.name }
+            println(position)
             if (position != -1) {
                 fridgeRecyclerView.post {
-                    fridgeRecyclerView.findViewHolderForAdapterPosition(position)?.itemView?.performClick()
+                    fridgeRecyclerView.findViewHolderForAdapterPosition(position - 1)?.itemView?.performClick()
                 }
             }
             fridgeToOpen = null
@@ -245,12 +246,12 @@ class FridgesFragment : Fragment() {
         fridges.add(fridge)
         fridge.wines = initWineArray(fridge.depth, fridge.sections, fridge.rps, fridge.columns)
         binding.noFridgesTextView.visibility = View.GONE
-        binding.fridgeRecyclerView.adapter?.notifyDataSetChanged()
+        fridgeAdapter.updateList(fridges.filter { it.name != "drunk" })
     }
 
     private fun removeFridge(fridge: Fridge) {
         fridges.remove(fridge)
-        binding.fridgeRecyclerView.adapter?.notifyDataSetChanged()
+        fridgeAdapter.updateList(fridges.filter { it.name != "drunk" })
         if (fridges.size == 1) { binding.noFridgesTextView.visibility = View.VISIBLE }
     }
 
@@ -319,7 +320,7 @@ class FridgesFragment : Fragment() {
 
     //adapter
     class FridgeAdapter(
-        private val fridges: List<Fridge>,
+        private var fridges: List<Fridge>,
         private val onFridgeClick: (Fridge) -> Unit,
         private val onFridgeLongClick: (Fridge) -> Unit
     ) : RecyclerView.Adapter<FridgeAdapter.FridgeViewHolder>() {
@@ -358,6 +359,11 @@ class FridgesFragment : Fragment() {
                 onFridgeLongClick(fridge)
                 true
             }
+        }
+
+        fun updateList(newFridges: List<Fridge>) {
+            fridges = newFridges
+            notifyDataSetChanged()
         }
 
         override fun getItemCount(): Int = fridges.size

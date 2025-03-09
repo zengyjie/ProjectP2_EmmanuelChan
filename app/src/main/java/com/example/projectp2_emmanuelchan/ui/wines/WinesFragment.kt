@@ -125,25 +125,29 @@ class WinesFragment : Fragment() {
         var myWinesListener = CompoundButton.OnCheckedChangeListener { _, _ -> (return@OnCheckedChangeListener)}
         val allWinesListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                binding.allWinesToggleButton.isClickable = false
+                binding.myWinesToggleButton.isClickable = true
                 binding.myWinesToggleButton.setOnCheckedChangeListener(null)
                 binding.myWinesToggleButton.isChecked = false
                 binding.myWinesToggleButton.setOnCheckedChangeListener(myWinesListener)
                 allWinesAdapter.updateList(databaseWines)
                 currentWineSet = databaseWines
                 currentWineSetName = "all"
-                filterWines(Filter(), databaseWines)
+                filterWines(filter, databaseWines)
                 binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
             }
         }
         myWinesListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                binding.myWinesToggleButton.isClickable = false
+                binding.allWinesToggleButton.isClickable = true
                 binding.allWinesToggleButton.setOnCheckedChangeListener(null)
                 binding.allWinesToggleButton.isChecked = false
                 binding.allWinesToggleButton.setOnCheckedChangeListener(allWinesListener)
                 allWinesAdapter.updateList(allMyWines)
                 currentWineSet = allMyWines
                 currentWineSetName = "my"
-                filterWines(Filter(), allMyWines)
+                filterWines(filter, allMyWines)
                 binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
             }
         }

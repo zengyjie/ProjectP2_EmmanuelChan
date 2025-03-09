@@ -440,6 +440,7 @@ class FridgeActivity : AppCompatActivity() {
         val wineNotesInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
         val winePriceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
         val searchResultsLayout = dialogView.findViewById<LinearLayout>(R.id.addSearchResultsLayout)
+        var presetSelected = false
 
         val wineList: List<FridgesFragment.Wine> = loadDB(this)
 
@@ -474,6 +475,7 @@ class FridgeActivity : AppCompatActivity() {
                     searchResultsLayout.visibility = View.GONE
                     val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
+                    presetSelected = true
                 }
 
                 searchResultsLayout.addView(wineCardView)
@@ -489,6 +491,11 @@ class FridgeActivity : AppCompatActivity() {
         })
 
         dialogView.findViewById<Button>(R.id.addWineButton).setOnClickListener {
+            if (!presetSelected) {
+                Toast.makeText(this, "no preset selected", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val name = wineNameInput.text.toString().trim()
             val priceStr = winePriceInput.text.toString().trim()
             val description = wineNotesInput.text.toString().trim()
