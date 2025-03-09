@@ -30,7 +30,8 @@
             android:layout_weight="1"
             android:text="Year"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/yearTextView"
@@ -68,7 +69,8 @@
             android:layout_weight="1"
             android:text="Type"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Spinner
             android:id="@+id/wineTypeSpinner"
@@ -97,7 +99,8 @@
             android:layout_weight="1"
             android:text="Vineyard"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Spinner
             android:id="@+id/vineyardSpinner"
@@ -124,7 +127,8 @@
             android:layout_weight="1"
             android:text="Region"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Spinner
             android:id="@+id/regionSpinner"
@@ -151,7 +155,8 @@
             android:layout_weight="1"
             android:text="Country"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <Spinner
             android:id="@+id/countrySpinner"
@@ -178,7 +183,8 @@
             android:layout_weight="1"
             android:text="Rating"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/minRatingButton"
@@ -201,7 +207,8 @@
             android:paddingHorizontal="8dp"
             android:text="-"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/maxRatingButton"
@@ -237,7 +244,8 @@
             android:layout_weight="1"
             android:text="Price"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/minPriceButton"
@@ -260,7 +268,8 @@
             android:paddingHorizontal="8dp"
             android:text="-"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/maxPriceButton"
@@ -297,7 +306,8 @@
             android:layout_weight="1"
             android:text="Search drunk wines"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <CheckBox
             android:id="@+id/drunkCheckBox"

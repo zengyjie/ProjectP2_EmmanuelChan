@@ -10,6 +10,7 @@ import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
@@ -47,7 +48,6 @@ import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuelchan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
-import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.findWine
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.getPairingSuggestion
 import com.example.projectp2_emmanuelchan.ui.wines.WinesFragment.Companion.loadImage
@@ -64,6 +64,7 @@ class FridgeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFridgeBinding
     private lateinit var wineRecyclerView: RecyclerView
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
     private var capturedImage: Bitmap? = null
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -93,7 +94,7 @@ class FridgeActivity : AppCompatActivity() {
             return mutableListOf(layer, section, row, column)
         }
 
-        fun saveImage(context: Context, bitmap: Bitmap, fileName: String): String? {
+        fun saveImageBm(context: Context, bitmap: Bitmap, fileName: String): String? {
             val directory = File(context.filesDir, "WineWise")
             if (!directory.exists()) {
                 directory.mkdirs()
@@ -111,14 +112,36 @@ class FridgeActivity : AppCompatActivity() {
             }
         }
 
+        fun saveImageUri(context: Context, imageUri: Uri, fileName: String): String? {
+            val directory = File(context.filesDir, "WineWise")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            val imageFile = File(directory, fileName)
+            return try {
+                context.contentResolver.openInputStream(imageUri)?.use { inputStream ->
+                    FileOutputStream(imageFile).use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                imageFile.absolutePath
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
+        }
+
         fun editWine(
             context: Context,
             wine: FridgesFragment.Wine,
             cameraLauncher: ActivityResultLauncher<Intent>,
+            galleryLauncher: ActivityResultLauncher<Intent>,
             capturedImage: Bitmap?,
             permissionLauncher: ActivityResultLauncher<String>,
             adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null,
-            adapter2: WinesFragment.AllWinesAdapter? = null
+            adapter2: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null,
+
         ) {
             val dialogView = LayoutInflater.from(context).inflate(R.layout.wine_edit, null)
             val dialog = androidx.appcompat.app.AlertDialog.Builder(context)
@@ -139,12 +162,33 @@ class FridgeActivity : AppCompatActivity() {
             wineTypeSpinner.setSelection(wineTypes.indexOf(wine.type))
 
             dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    permissionLauncher.launch(Manifest.permission.CAMERA)
-                } else {
-                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                    cameraLauncher.launch(cameraIntent)
+                val modeSelectDialogView = LayoutInflater.from(context).inflate(R.layout.mode_select_dialog, null)
+                val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setView(modeSelectDialogView)
+                val modeSelectDialog = dialogBuilder.create()
+
+                modeSelectDialogView.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    } else {
+                        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                        cameraLauncher.launch(cameraIntent)
+                    }
+                    modeSelectDialog.dismiss()
                 }
+
+                modeSelectDialogView.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    } else {
+                        val galleryIntent =
+                            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        galleryLauncher.launch(galleryIntent)
+                    }
+                    modeSelectDialog.dismiss()
+                }
+
+                modeSelectDialog.show()
             }
 
             val nameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
@@ -221,7 +265,7 @@ class FridgeActivity : AppCompatActivity() {
 
                 capturedImage?.let {
                     val fileName = "wine_${System.currentTimeMillis()}.jpg"
-                    val savedImagePath = saveImage(context, it, fileName)
+                    val savedImagePath = saveImageBm(context, it, fileName)
                     if (savedImagePath != null) {
                         wine.imagePath = savedImagePath
                     }
@@ -245,7 +289,7 @@ class FridgeActivity : AppCompatActivity() {
                 confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
                     val fridge = fridges[(getFridge(wine.parentFridge))]
                     val indices = findWine(fridge, wine)
-                    fridge.wines[indices?.get(0)!!][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
+                    fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = FridgesFragment.Wine()
                     adapter?.notifyDataSetChanged()
                     adapter2?.notifyDataSetChanged()
                     deleteDialog.dismiss()
@@ -268,6 +312,17 @@ class FridgeActivity : AppCompatActivity() {
             }
 
             dialog.show()
+        }
+
+        fun loadDB(context: Context): List<FridgesFragment.Wine> {
+            return try {
+                val inputStream = context.assets.open("database.json")
+                val jsonString = inputStream.bufferedReader().use { it.readText() }
+                Gson().fromJson(jsonString, object : TypeToken<List<FridgesFragment.Wine>>() {}.type)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                emptyList()
+            }
         }
     }
 
@@ -341,7 +396,7 @@ class FridgeActivity : AppCompatActivity() {
                 val imageBitmap = result.data?.extras?.get("data") as? Bitmap
                 if (imageBitmap != null) {
                     val fileName = "wine_${System.currentTimeMillis()}.jpg"
-                    val savedImagePath = saveImage(this, imageBitmap, fileName)
+                    val savedImagePath = saveImageBm(this, imageBitmap, fileName)
 
                     if (savedImagePath != null) {
                         selectedWine.imagePath = savedImagePath
@@ -353,6 +408,24 @@ class FridgeActivity : AppCompatActivity() {
                 }
             } else {
                 Toast.makeText(this, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageUri = result.data?.data
+                if (imageUri != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImageUri(this, imageUri, fileName)
+
+                    if (savedImagePath != null) {
+                        selectedWine.imagePath = savedImagePath
+                        wineRecyclerView.adapter?.notifyDataSetChanged()
+                        selectedImageView?.setImageURI(imageUri)
+                    } else {
+                        Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -368,7 +441,7 @@ class FridgeActivity : AppCompatActivity() {
         val winePriceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
         val searchResultsLayout = dialogView.findViewById<LinearLayout>(R.id.addSearchResultsLayout)
 
-        val wineList: List<FridgesFragment.Wine> = loadDB()
+        val wineList: List<FridgesFragment.Wine> = loadDB(this)
 
         fun updateSearchResults(query: String) {
             searchResultsLayout.removeAllViews()
@@ -386,7 +459,7 @@ class FridgeActivity : AppCompatActivity() {
                 val wineCardView = LayoutInflater.from(this).inflate(R.layout.all_wines_card, searchResultsLayout, false)
 
                 wineCardView.findViewById<TextView>(R.id.wineNameTextView).text = wine.name
-                wineCardView.findViewById<TextView>(R.id.wineDescTextView).text = "${wine.year}, ${wine.vineyard}"
+                wineCardView.findViewById<TextView>(R.id.wineDescTextView).text = wine.year.toString()
                 val wineImageView = wineCardView.findViewById<ImageView>(R.id.wineImageView)
                 if (wine.imagePath != "null" && wine.imagePath.isNotEmpty()) {
                     loadImage(wine.imagePath, wineImageView)
@@ -399,6 +472,8 @@ class FridgeActivity : AppCompatActivity() {
                     winePriceInput.setText(wine.price.toString())
                     loadImage(wine.imagePath, dialogView.findViewById(R.id.wineAddImage))
                     searchResultsLayout.visibility = View.GONE
+                    val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
                 }
 
                 searchResultsLayout.addView(wineCardView)
@@ -486,11 +561,28 @@ class FridgeActivity : AppCompatActivity() {
         selectedImageView = dialogView.findViewById(R.id.wineImage)
 
         dialogView.findViewById<ImageButton>(R.id.takeLabelButton).setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                permissionLauncher.launch(Manifest.permission.CAMERA)
-            } else {
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                cameraLauncher.launch(cameraIntent)
+            val modeSelectDialogView = LayoutInflater.from(this).inflate(R.layout.mode_select_dialog, null)
+            val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(modeSelectDialogView)
+            val modeSelectDialog = dialogBuilder.create()
+
+            modeSelectDialog.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                } else {
+                    val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    cameraLauncher.launch(cameraIntent)
+                }
+            }
+
+            modeSelectDialog.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                } else {
+                    val galleryIntent =
+                        Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    galleryLauncher.launch(galleryIntent)
+                }
             }
         }
 
@@ -662,7 +754,7 @@ class FridgeActivity : AppCompatActivity() {
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
-            editWine(this, wine, cameraLauncher, capturedImage, permissionLauncher, wineRecyclerView.adapter)
+            editWine(this, wine, cameraLauncher, galleryLauncher, capturedImage, permissionLauncher, wineRecyclerView.adapter)
             wineRecyclerView.adapter?.notifyDataSetChanged()
         }
 
@@ -687,7 +779,8 @@ class FridgeActivity : AppCompatActivity() {
                 val availableFridges = fridges.filter { it.name != selectedFridge.name }
 
                 val fridgeNames = availableFridges.map { it.name }
-                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fridgeNames)
+                val adapter = ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,
+                    fridgeNames.filter { it != "drunk" })
                 fridgeSpinner.adapter = adapter
 
                 openChangedFridgeButton.setOnClickListener {
@@ -896,17 +989,4 @@ class FridgeActivity : AppCompatActivity() {
             }
         }
     }
-
-    //save/load
-    private fun loadDB(): List<FridgesFragment.Wine> {
-        return try {
-            val inputStream = assets.open("database.json")
-            val jsonString = inputStream.bufferedReader().use { it.readText() }
-            Gson().fromJson(jsonString, object : TypeToken<List<FridgesFragment.Wine>>() {}.type)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
-
 }

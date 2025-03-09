@@ -10,13 +10,14 @@ import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.TypedValue
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.NumberPicker
@@ -33,7 +34,9 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.editWine
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.getIndicesFromPosition
-import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImage
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.loadDB
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImageBm
+import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImageUri
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.selectedImageView
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.getFridge
@@ -61,9 +64,12 @@ class WinesFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var allWinesAdapter: AllWinesAdapter
-    private val allWines = mutableListOf<FridgesFragment.Wine>()
+    private val allMyWines = mutableListOf<FridgesFragment.Wine>()
+    private var currentWineSet = allMyWines
+    private var currentWineSetName = "my"
     private var filter = Filter()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
     private var capturedImage: Bitmap? = null
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -89,34 +95,68 @@ class WinesFragment : Fragment() {
                     for (r in fridge.wines[l][s].indices) {
                         for (c in fridge.wines[l][s][r].indices) {
                             val wine = fridge.wines[l][s][r][c]
-                            if (wine.name != "null") { allWines.add(wine)}
-                        } } } }
-        }
+                            if (wine.name != "null") { allMyWines.add(wine)}
+                        } } } } }
 
-        val allWinesFiltered = allWines
+        val databaseWines = loadDB(requireContext()).toMutableList()
+        val allWinesFiltered = allMyWines
         val allWinesRecyclerView = binding.allWinesRecyclerView
         allWinesRecyclerView.layoutManager = GridLayoutManager(context, 1)
         allWinesAdapter = AllWinesAdapter(allWinesFiltered) { wine ->
-            val fridge = fridges[getFridge(wine.parentFridge)]
-            val indices = findWine(fridge, wine)
-            viewWine(fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]])
+            if (wine.parentFridge == "database") { viewWine(wine) }
+            else {
+                val fridge = fridges[getFridge(wine.parentFridge)]
+                val indices = findWine(fridge, wine)
+                viewWine(fridge.wines[indices[0]][indices[1]][indices[2]][indices[3]])
+            }
         }
         allWinesRecyclerView.adapter = allWinesAdapter
-        filterWines(Filter())
+        filterWines(Filter(), allMyWines)
 
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.searchBar.text = null
-        binding.searchBar.addTextChangedListener{ text ->
+        binding.searchBar.addTextChangedListener{
             filter.name = binding.searchBar.text.toString()
-            filterWines(filter)
+            filterWines(filter, currentWineSet)
         }
+
+        binding.myWinesToggleButton.isChecked = true
+
+        var myWinesListener = CompoundButton.OnCheckedChangeListener { _, _ -> (return@OnCheckedChangeListener)}
+        val allWinesListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                binding.myWinesToggleButton.setOnCheckedChangeListener(null)
+                binding.myWinesToggleButton.isChecked = false
+                binding.myWinesToggleButton.setOnCheckedChangeListener(myWinesListener)
+                allWinesAdapter.updateList(databaseWines)
+                currentWineSet = databaseWines
+                currentWineSetName = "all"
+                filterWines(Filter(), databaseWines)
+                binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+            }
+        }
+        myWinesListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                binding.allWinesToggleButton.setOnCheckedChangeListener(null)
+                binding.allWinesToggleButton.isChecked = false
+                binding.allWinesToggleButton.setOnCheckedChangeListener(allWinesListener)
+                allWinesAdapter.updateList(allMyWines)
+                currentWineSet = allMyWines
+                currentWineSetName = "my"
+                filterWines(Filter(), allMyWines)
+                binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
+            }
+        }
+
+        binding.myWinesToggleButton.setOnCheckedChangeListener(myWinesListener)
+        binding.allWinesToggleButton.setOnCheckedChangeListener(allWinesListener)
 
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val imageBitmap = result.data?.extras?.get("data") as? Bitmap
                 if (imageBitmap != null) {
                     val fileName = "wine_${System.currentTimeMillis()}.jpg"
-                    val savedImagePath = saveImage(requireContext(), imageBitmap, fileName)
+                    val savedImagePath = saveImageBm(requireContext(), imageBitmap, fileName)
 
                     if (savedImagePath != null) {
                         selectedWine.imagePath = savedImagePath
@@ -127,6 +167,23 @@ class WinesFragment : Fragment() {
                 }
             } else {
                 Toast.makeText(requireContext(), "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageUri = result.data?.data
+                if (imageUri != null) {
+                    val fileName = "wine_${System.currentTimeMillis()}.jpg"
+                    val savedImagePath = saveImageUri(requireContext(), imageUri, fileName)
+
+                    if (savedImagePath != null) {
+                        selectedWine.imagePath = savedImagePath
+                        selectedImageView?.setImageURI(imageUri)
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to save image", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
 
@@ -193,6 +250,16 @@ class WinesFragment : Fragment() {
                 }
             }
 
+            if (wine.parentFridge == "database") {
+                revertPairingsButton.visibility = View.GONE
+                pairingsEditText.isFocusable = false
+                pairingsEditText.isClickable = false
+                pairingsEditText.isLongClickable = false
+                pairingsEditText.setText(originalPairings)
+                wine.pairings = originalPairings
+            }
+
+
             revertPairingsButton.setOnClickListener {
                 pairingsEditText.setText(originalPairings)
                 wine.pairings = originalPairings
@@ -202,7 +269,8 @@ class WinesFragment : Fragment() {
         }
 
         val markDrunkButton = dialogView.findViewById<Button>(R.id.markDrunkButton)
-        if (wine.parentFridge == "drunk") { markDrunkButton.text = "mark undrunk" }
+        if (wine.parentFridge == "drunk") { markDrunkButton.text = "put back" }
+        else { markDrunkButton.visibility = View.GONE }
         markDrunkButton.setOnClickListener {
             if (wine.parentFridge == "drunk") {
                 moving = true
@@ -222,7 +290,7 @@ class WinesFragment : Fragment() {
                 val adapter = ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_spinner_dropdown_item,
-                    fridgeNames
+                    fridgeNames.filter { it != "drunk" }
                 )
                 fridgeSpinner.adapter = adapter
 
@@ -241,49 +309,14 @@ class WinesFragment : Fragment() {
                 dialog1.show()
 
                 dialog.dismiss()
-            } else {
-                selectedWine = wine
-                selectedFridge = fridges[getFridge("drunk")]
-                val indices = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
-                selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] =
-                    FridgesFragment.Wine(
-                        selectedWine.name,
-                        selectedWine.price,
-                        selectedWine.year,
-                        selectedWine.type,
-                        selectedWine.vineyard,
-                        selectedWine.region,
-                        selectedWine.country,
-                        selectedWine.grapeVariety,
-                        selectedWine.rating,
-                        selectedWine.pairings,
-                        selectedWine.drinkBy,
-                        selectedWine.description,
-                        selectedWine.imagePath,
-                        "drunk"
-                    )
-                selectedWine = FridgesFragment.Wine()
-                val indices1 = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
-                fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices[1]][indices[2]][indices[3]] =
-                    FridgesFragment.Wine()
-                Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-                val drunkFridge = fridges[getFridge("drunk")]
-                drunkFridge.counter++
-                resizeWinesArray(drunkFridge, 1, drunkFridge.sections + 1, 1, 1)
-                binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
             }
         }
 
-        dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
-            dialog.dismiss()
-            editWine(requireContext(), wine, cameraLauncher, capturedImage, permissionLauncher, adapter2 = allWinesAdapter)
-        }
-
+        dialogView.findViewById<Button>(R.id.editWineButton)?.visibility = View.GONE
         dialogView.findViewById<Button>(R.id.duplicateWineButton).visibility = View.GONE
 
         val moveButton = dialogView.findViewById<Button>(R.id.moveWineButton)
-        if (wine.parentFridge == "drunk") { moveButton.visibility = View.GONE }
+        if (wine.parentFridge == "drunk" || wine.parentFridge == "database") { moveButton.visibility = View.GONE }
         moveButton.text = "locate"
         moveButton.setOnClickListener {
             dialog.dismiss()
@@ -326,7 +359,7 @@ class WinesFragment : Fragment() {
                 val varieties = grapeVariety.split(",").map { it.trim() }
 
                 val matchedPairings = varieties.mapNotNull { pairingsMap[it] }
-                if (matchedPairings.isNotEmpty()) { matchedPairings.joinToString("") } else { "" }
+                if (matchedPairings.isNotEmpty()) { matchedPairings.joinToString("\n") } else { "" }
             } catch (e: Exception) {
                 e.printStackTrace()
                 ""
@@ -351,8 +384,8 @@ class WinesFragment : Fragment() {
         val drunk: Boolean = false,
     )
 
-    private fun filterWines(filter: Filter) {
-        var filteredList = allWines.filter { wine ->
+    private fun filterWines(filter: Filter, wines: MutableList<FridgesFragment.Wine>) {
+        var filteredList = wines.filter { wine ->
             (filter.year == null || wine.year == filter.year) &&
                     (filter.minPrice == null || wine.price >= filter.minPrice) &&
                     (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
@@ -375,9 +408,9 @@ class WinesFragment : Fragment() {
         val dialogBuilder = AlertDialog.Builder(requireContext()).setView(dialogView)
         val dialog = dialogBuilder.create()
 
-        val allVineyards = allWines.map { it.vineyard }.filter { it.isNotEmpty() }.distinct().sorted()
-        val allRegions = allWines.map { it.region }.filter { it.isNotEmpty() }.distinct().sorted()
-        val allCountries = allWines.map { it.parentFridge }.filter { it.isNotEmpty() }.distinct().sorted()
+        val allVineyards = currentWineSet.map { it.vineyard }.filter { it.isNotEmpty() }.distinct().sorted()
+        val allRegions = currentWineSet.map { it.region }.filter { it.isNotEmpty() }.distinct().sorted()
+        val allCountries = currentWineSet.map { it.parentFridge }.filter { it.isNotEmpty() }.distinct().sorted()
 
         fun setupSpinner(spinner: Spinner, options: List<String>, selectedValue: String?) {
             val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, options)
@@ -526,13 +559,13 @@ class WinesFragment : Fragment() {
                 drunk = drunkCheckBox.isChecked
             )
 
-            filterWines(filter)
+            filterWines(filter, currentWineSet)
             dialog.dismiss()
         }
 
         dialogView.findViewById<Button>(R.id.clearFiltersButton).setOnClickListener {
             filter = Filter()
-            filterWines(filter)
+            filterWines(filter, currentWineSet)
             dialog.dismiss()
         }
 
@@ -570,7 +603,7 @@ class WinesFragment : Fragment() {
                 loadImage(tempWine.imagePath, holder.wineImageView)
             }
             holder.wineNameTextView.text = tempWine.name
-            holder.wineDescTextView.text = "${tempWine.year}, ${tempWine.vineyard}"
+            holder.wineDescTextView.text = tempWine.year.toString()
             holder.itemView.setOnClickListener { onWineClick(tempWine) }
         }
 

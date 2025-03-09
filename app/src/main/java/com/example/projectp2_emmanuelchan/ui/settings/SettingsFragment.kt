@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentSettingsBinding
+import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import java.io.File
 
 class SettingsFragment : Fragment() {
@@ -31,7 +32,7 @@ class SettingsFragment : Fragment() {
         val root: View = binding.root
 
         val themeSpinner: Spinner = binding.themeSpinner
-        val themes = arrayOf("Default", "B&W (Dark)")
+        val themes = arrayOf("Default", "Dark")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, themes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         themeSpinner.adapter = adapter
@@ -67,6 +68,7 @@ class SettingsFragment : Fragment() {
                 }
                 fridges.clear()
                 sharedPreferences.edit().clear().apply()
+                FridgesFragment.saveFridges(requireContext())
                 deleteDialog.dismiss()
                 Toast.makeText(requireContext(), "All data cleared successfully", Toast.LENGTH_SHORT).show()
             }

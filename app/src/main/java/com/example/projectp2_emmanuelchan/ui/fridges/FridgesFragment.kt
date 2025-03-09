@@ -104,7 +104,7 @@ class FridgesFragment : Fragment() {
         fridgeRecyclerView = binding.fridgeRecyclerView
         val spanCount = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) { 2 } else { 3 }
         fridgeRecyclerView.layoutManager = GridLayoutManager(context, spanCount)
-        fridgeAdapter = FridgeAdapter(fridges.filter { it.name != "drunk" }, { fridge ->
+        fridgeAdapter = FridgeAdapter(fridges.filter { it.name != "drunk" && it.name != "database" }, { fridge ->
             origSelectedFridge = fridge
             openFridge(fridge, requireContext()) },
             { fridge -> showEditFridgePopup(fridge) })
@@ -200,9 +200,10 @@ class FridgesFragment : Fragment() {
         }
 
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
-            val newFridge = readFridgeData(dialogView)
-            if (newFridge.name.equals("InvalidName")) { newFridge.name = fridge.name }
+            val newFridge = readFridgeData(dialogView, edit = true)
+            if (newFridge.name == "InvalidName") { newFridge.name = fridge.name }
             editFridge(fridge, newFridge)
+            toast("success")
             dialog.dismiss()
         }
 
@@ -277,11 +278,9 @@ class FridgesFragment : Fragment() {
             toast("Invalid name")
             name = "InvalidName"
         }
-        if (fridges.any { it.name.equals(name, ignoreCase = true) }) {
-            if (!edit) {
-                toast("Name already in use")
-                name = "InvalidName"
-            }
+        if (fridges.any { it.name.equals(name, ignoreCase = true) && !edit }) {
+            toast("Name already in use")
+            name = "InvalidName"
         }
 
         var icon: Int = R.drawable.default_fridge
