@@ -2,6 +2,7 @@ package com.example.projectp2_emmanuelchan.ui.wines
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -10,7 +11,8 @@ import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.InputType
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +22,7 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.NumberPicker
+import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -32,8 +34,6 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.editWine
-import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.getIndicesFromPosition
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.loadDB
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImageBm
 import com.example.projectp2_emmanuelchan.FridgeActivity.Companion.saveImageUri
@@ -51,9 +51,10 @@ import com.example.projectp2_emmanuelchan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.fridgeToOpen
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.itemLayer
-import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.resizeWinesArray
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment.Companion.saveFridges
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -408,40 +409,132 @@ class WinesFragment : Fragment() {
     }
 
     private fun showFilterDialog() {
+        fun setupSpinner(spinner: Spinner, options: List<String>, selectedValue: String?) {
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, options)
+            spinner.adapter = adapter
+            if (selectedValue != null && options.contains(selectedValue)) {
+                spinner.setSelection(options.indexOf(selectedValue))
+            }
+        }
+
+        fun showSeekBar(
+            context: Context,
+            min: Int,
+            max: Int,
+            current: Int?,
+            onValueSelected: (Int) -> Unit
+        ) {
+            val seekBarDialogView = LayoutInflater.from(context).inflate(R.layout.seek_bar_dialog, null)
+            val seekBar = seekBarDialogView.findViewById<SeekBar>(R.id.seekBar)
+            val valueText = seekBarDialogView.findViewById<TextView>(R.id.valueTextView)
+            val cancelButton = seekBarDialogView.findViewById<Button>(R.id.cancelButton)
+            val okButton = seekBarDialogView.findViewById<Button>(R.id.okButton)
+
+            seekBar.max = max - min
+            seekBar.progress = (current ?: min) - min
+            valueText.text = "${seekBar.progress + min}"
+
+            seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    valueText.text = "${progress + min}"
+                }
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+
+            val seekBarDialog = Dialog(context)
+            seekBarDialog.setContentView(seekBarDialogView)
+            seekBarDialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            cancelButton.setOnClickListener {
+                seekBarDialog.dismiss()
+            }
+
+            okButton.setOnClickListener {
+                onValueSelected(seekBar.progress + min)
+                seekBarDialog.dismiss()
+            }
+
+            seekBarDialog.show()
+        }
+
+        fun showNumberInputDialog(
+            context: Context,
+            min: Int,
+            max: Int,
+            current: Int?,
+            onNumberSelected: (Int) -> Unit
+        ) {
+            val numberDialogView = LayoutInflater.from(context).inflate(R.layout.edit_text_dialog, null)
+            val inputField = numberDialogView.findViewById<TextInputEditText>(R.id.numberInputField)
+            val inputLayout = numberDialogView.findViewById<TextInputLayout>(R.id.numberInputLayout)
+            val cancelButton = numberDialogView.findViewById<Button>(R.id.cancelButton)
+            val okButton = numberDialogView.findViewById<Button>(R.id.okButton)
+
+            inputField.setText(current?.toString() ?: "")
+
+            val numberInputDialog = Dialog(context)
+            numberInputDialog.setContentView(numberDialogView)
+            numberInputDialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            cancelButton.setOnClickListener {
+                numberInputDialog.dismiss()
+            }
+
+            okButton.setOnClickListener {
+                val value = inputField.text.toString().toIntOrNull()
+                if (value != null && value in min..max) {
+                    onNumberSelected(value)
+                    numberInputDialog.dismiss()
+                } else {
+                    inputLayout.error = "Value must be between $min and $max"
+                }
+            }
+
+            inputField.addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    val value = s?.toString()?.toIntOrNull()
+                    if (value == null || value !in min..max) {
+                        inputLayout.error = "Value must be between $min and $max"
+                    } else {
+                        inputLayout.error = null
+                    }
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            })
+
+            numberInputDialog.show()
+        }
+
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.filter_dialog, null)
         val dialogBuilder = AlertDialog.Builder(requireContext()).setView(dialogView)
         val dialog = dialogBuilder.create()
 
         val allVineyards = currentWineSet.map { it.vineyard }.filter { it.isNotEmpty() }.distinct().sorted()
         val allRegions = currentWineSet.map { it.region }.filter { it.isNotEmpty() }.distinct().sorted()
-        val allCountries = currentWineSet.map { it.parentFridge }.filter { it.isNotEmpty() }.distinct().sorted()
-
-        fun setupSpinner(spinner: Spinner, options: List<String>, selectedValue: String?) {
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, options)
-            spinner.adapter = adapter
-            selectedValue?.let { spinner.setSelection(options.indexOf(it).takeIf { it >= 0 } ?: 0) }
-        }
+        val allCountries = currentWineSet.map { it.country }.filter { it.isNotEmpty() }.distinct().sorted()
 
         val yearPickerButton = dialogView.findViewById<ImageButton>(R.id.yearPickerButton)
         val yearTextView = dialogView.findViewById<TextView>(R.id.yearTextView)
         val yearCheckBox = dialogView.findViewById<CheckBox>(R.id.yearCheckBox)
-
         val wineTypeSpinner = dialogView.findViewById<Spinner>(R.id.wineTypeSpinner)
-        val wineTypes = listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified")
-        setupSpinner(wineTypeSpinner, wineTypes, filter.type)
         val typeCheckBox = dialogView.findViewById<CheckBox>(R.id.typeCheckBox)
 
         val vineyardSpinner = dialogView.findViewById<Spinner>(R.id.vineyardSpinner)
         val vineyardCheckBox = dialogView.findViewById<CheckBox>(R.id.vineyardCheckBox)
-        setupSpinner(vineyardSpinner, allVineyards, filter.vineyard)
-
         val regionSpinner = dialogView.findViewById<Spinner>(R.id.regionSpinner)
         val regionCheckBox = dialogView.findViewById<CheckBox>(R.id.regionCheckBox)
-        setupSpinner(regionSpinner, allRegions, filter.region)
-
         val countrySpinner = dialogView.findViewById<Spinner>(R.id.countrySpinner)
         val countryCheckBox = dialogView.findViewById<CheckBox>(R.id.countryCheckBox)
-        setupSpinner(countrySpinner, allCountries, filter.country)
 
         val minRatingButton = dialogView.findViewById<Button>(R.id.minRatingButton)
         val maxRatingButton = dialogView.findViewById<Button>(R.id.maxRatingButton)
@@ -453,47 +546,42 @@ class WinesFragment : Fragment() {
 
         val drunkCheckBox = dialogView.findViewById<CheckBox>(R.id.drunkCheckBox)
 
-        minPriceButton.text = filter.minPrice?.toString() ?: "Min"
-        maxPriceButton.text = filter.maxPrice?.toString() ?: "Max"
-        priceCheckBox.isChecked = filter.minPrice != null || filter.maxPrice != null
-
         yearTextView.text = filter.year?.toString() ?: "Select Year"
         yearCheckBox.isChecked = filter.year != null
 
+        setupSpinner(wineTypeSpinner, listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified"), filter.type)
+        typeCheckBox.isChecked = filter.type != null
+
+        setupSpinner(vineyardSpinner, allVineyards, filter.vineyard)
         vineyardCheckBox.isChecked = filter.vineyard != null
+
+        setupSpinner(regionSpinner, allRegions, filter.region)
         regionCheckBox.isChecked = filter.region != null
+
+        setupSpinner(countrySpinner, allCountries, filter.country)
         countryCheckBox.isChecked = filter.country != null
+
+        minPriceButton.text = filter.minPrice?.toString() ?: "Min"
+        maxPriceButton.text = filter.maxPrice?.toString() ?: "Max"
+        priceCheckBox.isChecked = filter.minPrice != null || filter.maxPrice != null
 
         minRatingButton.text = filter.minRating?.toString() ?: "Min"
         maxRatingButton.text = filter.maxRating?.toString() ?: "Max"
         ratingCheckBox.isChecked = filter.minRating != null || filter.maxRating != null
 
-        fun showNumberPicker(context: Context, min: Int, max: Int, current: Int?, onNumberSelected: (Int) -> Unit) {
-            val numberPicker = NumberPicker(context).apply {
-                minValue = min
-                maxValue = max
-                value = current?.coerceIn(min, max) ?: min
-                wrapSelectorWheel = false
-            }
+        drunkCheckBox.isChecked = filter.drunk
 
-            AlertDialog.Builder(context)
-                .setView(numberPicker)
-                .setPositiveButton("OK") { _, _ -> onNumberSelected(numberPicker.value) }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
-        fun showYearPicker(context: Context) {
+        yearPickerButton.setOnClickListener {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-            showNumberPicker(context, 1900, currentYear, filter.year) { selectedYear ->
+            showSeekBar(requireContext(), 1900, currentYear, filter.year) { selectedYear ->
                 yearTextView.text = selectedYear.toString()
             }
         }
 
         minPriceButton.setOnClickListener {
             val currentMin = minPriceButton.text.toString().toIntOrNull()
-            val currentMax = maxPriceButton.text.toString().toIntOrNull() ?: 1000000
-            showNumberPicker(requireContext(), 0, currentMax, currentMin) { selectedValue ->
+            val currentMax = maxPriceButton.text.toString().toIntOrNull() ?: 1_000_000
+            showNumberInputDialog(minPriceButton.context, 0, currentMax, currentMin) { selectedValue ->
                 minPriceButton.text = selectedValue.toString()
             }
         }
@@ -501,15 +589,16 @@ class WinesFragment : Fragment() {
         maxPriceButton.setOnClickListener {
             val currentMax = maxPriceButton.text.toString().toIntOrNull()
             val currentMin = minPriceButton.text.toString().toIntOrNull() ?: 0
-            showNumberPicker(requireContext(), currentMin, 1000000, currentMax) { selectedValue ->
+            showNumberInputDialog(maxPriceButton.context, currentMin, 1_000_000, currentMax) { selectedValue ->
                 maxPriceButton.text = selectedValue.toString()
             }
         }
 
+
         minRatingButton.setOnClickListener {
             val currentMin = minRatingButton.text.toString().toIntOrNull()
             val currentMax = maxRatingButton.text.toString().toIntOrNull() ?: 100
-            showNumberPicker(requireContext(), 0, currentMax, currentMin) { selectedValue ->
+            showSeekBar(requireContext(), 0, currentMax, currentMin) { selectedValue ->
                 minRatingButton.text = selectedValue.toString()
             }
         }
@@ -517,58 +606,25 @@ class WinesFragment : Fragment() {
         maxRatingButton.setOnClickListener {
             val currentMax = maxRatingButton.text.toString().toIntOrNull()
             val currentMin = minRatingButton.text.toString().toIntOrNull() ?: 0
-            showNumberPicker(requireContext(), currentMin, 100, currentMax) { selectedValue ->
+            showSeekBar(requireContext(), currentMin, 100, currentMax) { selectedValue ->
                 maxRatingButton.text = selectedValue.toString()
             }
         }
 
-        yearPickerButton.setOnClickListener {
-            showYearPicker(requireContext())
-        }
-
         dialogView.findViewById<Button>(R.id.applyFilterButton).setOnClickListener {
-            val minPrice = minPriceButton.text.toString().toIntOrNull()
-            val maxPrice = maxPriceButton.text.toString().toIntOrNull()
-            val priceChecked = priceCheckBox.isChecked
-
-            val type = wineTypeSpinner.selectedItem.toString()
-            val typeChecked = typeCheckBox.isChecked
-
-            val yearText = yearTextView.text.toString().toIntOrNull()
-            val yearChecked = yearCheckBox.isChecked
-
-            val vineyard = vineyardSpinner.selectedItem?.toString()
-            val vineyardChecked = vineyardCheckBox.isChecked
-
-            val region = regionSpinner.selectedItem?.toString()
-            val regionChecked = regionCheckBox.isChecked
-
-            val country = countrySpinner.selectedItem?.toString()
-            val countryChecked = countryCheckBox.isChecked
-
-            val minRating = minRatingButton.text.toString().toDoubleOrNull()
-            val maxRating = maxRatingButton.text.toString().toDoubleOrNull()
-            val ratingChecked = ratingCheckBox.isChecked
-
             filter = Filter(
-                year = if (yearChecked) yearText else null,
-                minPrice = if (priceChecked) minPrice else null,
-                maxPrice = if (priceChecked) maxPrice else null,
-                type = if (typeChecked) type else null,
-                vineyard = if (vineyardChecked) vineyard else null,
-                region = if (regionChecked) region else null,
-                country = if (countryChecked) country else null,
-                minRating = if (ratingChecked) minRating else null,
-                maxRating = if (ratingChecked) maxRating else null,
+                year = if (yearCheckBox.isChecked) yearTextView.text.toString().toIntOrNull() else null,
+                minPrice = if (priceCheckBox.isChecked) minPriceButton.text.toString().toIntOrNull() else null,
+                maxPrice = if (priceCheckBox.isChecked) maxPriceButton.text.toString().toIntOrNull() else null,
+                type = if (typeCheckBox.isChecked) wineTypeSpinner.selectedItem.toString() else null,
+                vineyard = if (vineyardCheckBox.isChecked) vineyardSpinner.selectedItem?.toString() else null,
+                region = if (regionCheckBox.isChecked) regionSpinner.selectedItem?.toString() else null,
+                country = if (countryCheckBox.isChecked) countrySpinner.selectedItem?.toString() else null,
+                minRating = if (ratingCheckBox.isChecked) minRatingButton.text.toString().toDoubleOrNull() else null,
+                maxRating = if (ratingCheckBox.isChecked) maxRatingButton.text.toString().toDoubleOrNull() else null,
                 drunk = drunkCheckBox.isChecked
             )
 
-            filterWines(filter, currentWineSet)
-            dialog.dismiss()
-        }
-
-        dialogView.findViewById<Button>(R.id.clearFiltersButton).setOnClickListener {
-            filter = Filter()
             filterWines(filter, currentWineSet)
             dialog.dismiss()
         }

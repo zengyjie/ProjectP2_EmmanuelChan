@@ -707,18 +707,14 @@ class FridgeActivity : AppCompatActivity() {
                 if (!hasFocus) {
                     wine.pairings = pairingsEditText.text.toString()
                     val indices = findWine(selectedFridge, wine)
-                    if (indices != null) {
-                        selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
-                    }
+                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
                 }
             }
 
             dialog1.setOnDismissListener {
                 wine.pairings = pairingsEditText.text.toString()
                 val indices = findWine(selectedFridge, wine)
-                if (indices != null) {
-                    selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
-                }
+                selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]].pairings = wine.pairings
             }
 
             revertPairingsButton.setOnClickListener {
@@ -988,7 +984,7 @@ class FridgeActivity : AppCompatActivity() {
                     val left = parent.paddingLeft
                     val right = parent.width - parent.paddingRight
                     val top = child.bottom + params.bottomMargin
-                    val bottom = top + (divider?.intrinsicHeight ?: 4)
+                    val bottom = top + (divider.intrinsicHeight ?: 4)
 
                     divider.setBounds(left, top, right, bottom)
                     divider.draw(canvas)
