@@ -53,17 +53,17 @@
                 app:layout_constraintStart_toEndOf="@+id/wineImage" />
 
             <ImageButton
-                android:id="@+id/scanBarcodeButton"
+                android:id="@+id/revertImageButton"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_marginBottom="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:elevation="4dp"
-                android:src="@drawable/ic_scan"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_revert"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/takeLabelButton"
-                tools:src="@drawable/ic_scan"
-                android:scaleType="fitCenter" />
+                tools:src="@drawable/ic_revert" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.textfield.TextInputLayout

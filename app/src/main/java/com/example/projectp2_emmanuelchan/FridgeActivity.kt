@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
@@ -22,6 +23,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -31,6 +33,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
@@ -66,12 +69,21 @@ class FridgeActivity : AppCompatActivity() {
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
     private var capturedImage: Bitmap? = null
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             cameraLauncher.launch(cameraIntent)
         } else {
-            Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Camera permission denied.", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private val galleryPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            val galleryIntent =
+                Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            galleryLauncher.launch(galleryIntent)
+        } else {
+            Toast.makeText(this, "Permission denied.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -132,17 +144,19 @@ class FridgeActivity : AppCompatActivity() {
             }
         }
 
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         fun editWine(
             context: Context,
             wine: FridgesFragment.Wine,
             cameraLauncher: ActivityResultLauncher<Intent>,
             galleryLauncher: ActivityResultLauncher<Intent>,
             capturedImage: Bitmap?,
-            permissionLauncher: ActivityResultLauncher<String>,
+            cameraPermissionLauncher: ActivityResultLauncher<String>,
+            galleryPermissionLauncher: ActivityResultLauncher<String>,
             adapter: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null,
             adapter2: RecyclerView.Adapter<RecyclerView.ViewHolder>? = null,
 
-        ) {
+            ) {
             val dialogView = LayoutInflater.from(context).inflate(R.layout.wine_edit, null)
             val dialog = androidx.appcompat.app.AlertDialog.Builder(context)
                 .setView(dialogView)
@@ -169,7 +183,7 @@ class FridgeActivity : AppCompatActivity() {
 
                 modeSelectDialogView.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     } else {
                         val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                         cameraLauncher.launch(cameraIntent)
@@ -178,8 +192,9 @@ class FridgeActivity : AppCompatActivity() {
                 }
 
                 modeSelectDialogView.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                        println("ok")
+                        galleryPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
                     } else {
                         val galleryIntent =
                             Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -189,6 +204,19 @@ class FridgeActivity : AppCompatActivity() {
                 }
 
                 modeSelectDialog.show()
+            }
+
+            dialogView.findViewById<ImageButton>(R.id.revertImageButton).setOnClickListener {
+                var found = false
+                for (wine in loadDB(context)) {
+                    if (wine.name == selectedWine.name) {
+                        selectedWine.imagePath = wine.imagePath
+                        loadImage(selectedWine.imagePath, editImageView)
+                        found = true
+                        break
+                    }
+                }
+                if (!found) { Toast.makeText(context, "No such wine in database.", Toast.LENGTH_SHORT).show() }
             }
 
             val nameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
@@ -306,7 +334,7 @@ class FridgeActivity : AppCompatActivity() {
             }
 
             dialogView.setOnTouchListener { _, _ ->
-                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                val imm = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
                 false
             }
@@ -337,7 +365,7 @@ class FridgeActivity : AppCompatActivity() {
                 finish()
             }
         })
-        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("AppPreferences", MODE_PRIVATE)
         when (sharedPreferences.getInt("theme", 0)) {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
@@ -392,7 +420,7 @@ class FridgeActivity : AppCompatActivity() {
         }
 
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val imageBitmap = result.data?.extras?.get("data") as? Bitmap
                 if (imageBitmap != null) {
                     val fileName = "wine_${System.currentTimeMillis()}.jpg"
@@ -412,7 +440,7 @@ class FridgeActivity : AppCompatActivity() {
         }
 
         galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val imageUri = result.data?.data
                 if (imageUri != null) {
                     val fileName = "wine_${System.currentTimeMillis()}.jpg"
@@ -430,6 +458,7 @@ class FridgeActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun showAddWineDialog(index: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_add, null)
         val dialog = AlertDialog.Builder(this)
@@ -473,8 +502,11 @@ class FridgeActivity : AppCompatActivity() {
                     winePriceInput.setText(wine.price.toString())
                     loadImage(wine.imagePath, dialogView.findViewById(R.id.wineAddImage))
                     searchResultsLayout.visibility = View.GONE
-                    val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val imm = this.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
+                    dialog.findViewById<EditText>(R.id.editWineName).clearFocus()
+                    dialog.findViewById<EditText>(R.id.editDescription).clearFocus()
+                    dialog.findViewById<EditText>(R.id.editPrice).clearFocus()
                     presetSelected = true
                 }
 
@@ -529,11 +561,11 @@ class FridgeActivity : AppCompatActivity() {
 
         dialogView.findViewById<Button>(R.id.enterManualWineButton).setOnClickListener {
             dialog.dismiss()
-            showManualAddWineDialog(index, cameraLauncher, permissionLauncher)
+            showManualAddWineDialog(index, cameraLauncher, cameraPermissionLauncher, galleryPermissionLauncher)
         }
 
         dialogView.setOnTouchListener { _, _ ->
-            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = this.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
             false
         }
@@ -541,7 +573,13 @@ class FridgeActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showManualAddWineDialog(index: Int, cameraLauncher: ActivityResultLauncher<Intent>, permissionLauncher: ActivityResultLauncher<String>) {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun showManualAddWineDialog(
+        index: Int,
+        cameraLauncher: ActivityResultLauncher<Intent>,
+        cameraPermissionLauncher: ActivityResultLauncher<String>,
+        galleryPermissionLauncher: ActivityResultLauncher<String>
+    ) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_edit, null)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setView(dialogView)
@@ -575,7 +613,7 @@ class FridgeActivity : AppCompatActivity() {
 
             modeSelectDialog.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                     cameraLauncher.launch(cameraIntent)
@@ -583,8 +621,8 @@ class FridgeActivity : AppCompatActivity() {
             }
 
             modeSelectDialog.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                    galleryPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
                 } else {
                     val galleryIntent =
                         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -660,7 +698,7 @@ class FridgeActivity : AppCompatActivity() {
         }
 
         dialogView.setOnTouchListener { _, _ ->
-            val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = this.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
             false
         }
@@ -668,6 +706,7 @@ class FridgeActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun openWine(wine: FridgesFragment.Wine, position: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_info, null)
         val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(this)
@@ -757,7 +796,7 @@ class FridgeActivity : AppCompatActivity() {
 
         dialogView.findViewById<Button>(R.id.editWineButton)?.setOnClickListener {
             dialog.dismiss()
-            editWine(this, wine, cameraLauncher, galleryLauncher, capturedImage, permissionLauncher, wineRecyclerView.adapter)
+            editWine(this, wine, cameraLauncher, galleryLauncher, capturedImage, cameraPermissionLauncher, galleryPermissionLauncher, wineRecyclerView.adapter)
             wineRecyclerView.adapter?.notifyDataSetChanged()
         }
 
@@ -927,6 +966,7 @@ class FridgeActivity : AppCompatActivity() {
             return WineViewHolder(view)
         }
 
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         override fun onBindViewHolder(holder: WineViewHolder, position: Int) {
             val indices = getIndicesFromPosition(position, fridge)
             var wine = fridge.wines[selectedLayer][indices[1]][indices[2]][indices[3]]
@@ -984,7 +1024,7 @@ class FridgeActivity : AppCompatActivity() {
                     val left = parent.paddingLeft
                     val right = parent.width - parent.paddingRight
                     val top = child.bottom + params.bottomMargin
-                    val bottom = top + (divider.intrinsicHeight ?: 4)
+                    val bottom = top + (divider.intrinsicHeight)
 
                     divider.setBounds(left, top, right, bottom)
                     divider.draw(canvas)

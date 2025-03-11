@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1000486878358",
+    "project_id": "projectp2-emmanuelchan",
+    "storage_bucket": "projectp2-emmanuelchan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1000486878358:android:0fc4377b9f44e20e8596b7",
+        "android_client_info": {
+          "package_name": "com.example.projectp2_emmanuelchan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1000486878358-eg63ibu3fs0kqbpjrrd9mohinplaa8nv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.projectp2_emmanuelchan",
+            "certificate_hash": "38102383130bc0c4d8a9a9b68c09ba87ad130126"
+          }
+        },
+        {
+          "client_id": "1000486878358-3s8eb23gbcldg8556k5ctnj379dk2tva.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8dNZbef-gjOVXkV78VbRh7SmOOq3PWQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1000486878358-3s8eb23gbcldg8556k5ctnj379dk2tva.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

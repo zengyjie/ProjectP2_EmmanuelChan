@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo regex, firebase, formatPicture, revertImage, filter
+//todo firebase, formatPicture, revertImage
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding

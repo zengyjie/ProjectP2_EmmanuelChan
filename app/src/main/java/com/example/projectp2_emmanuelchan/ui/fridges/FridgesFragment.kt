@@ -173,7 +173,7 @@ class FridgesFragment : Fragment() {
         val dialog = dialogBuilder.create()
 
         dialogView.findViewById<TextView>(R.id.titleTextView)?.text = "Edit Fridge"
-        dialogView.findViewById<TextView>(R.id.searchBar).text = fridge.name
+        dialogView.findViewById<TextView>(R.id.fridgeNameEditText).text = fridge.name
         dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner).count(fridge.sections)
         dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner).count(fridge.columns)
         dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner).count(fridge.rps)
@@ -268,7 +268,7 @@ class FridgesFragment : Fragment() {
     }
 
     private fun readFridgeData(dialogView: View, edit: Boolean = false): Fridge {
-        val nameEditText = dialogView.findViewById<EditText>(R.id.searchBar)
+        val nameEditText = dialogView.findViewById<EditText>(R.id.fridgeNameEditText)
         var name = nameEditText?.text.toString().trim()
 
         if (name.isEmpty()) {

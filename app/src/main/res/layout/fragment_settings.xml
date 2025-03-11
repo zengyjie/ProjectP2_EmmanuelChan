@@ -27,7 +27,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1.5"
-                android:text="    Theme"
+                android:text="     Theme"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -36,22 +36,50 @@
                 android:id="@+id/themeSpinner"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="?attr/colorPrimary"
                 android:spinnerMode="dropdown" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/aboutButton"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="8dp"
-            android:background="?attr/selectableItemBackground"
-            android:text="About"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="     Account"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/accountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Not logged in"
+                android:textAlignment="viewStart" />
+
+            <Button
+                android:id="@+id/accountButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="0"
+                android:background="?attr/selectableItemBackground"
+                android:text="Login "
+                android:textAlignment="viewEnd"
+                android:textAllCaps="true"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/clearAllButton"
@@ -59,15 +87,11 @@
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
             android:background="?attr/selectableItemBackground"
-            android:text="Clear data"
+            android:text=" Clear data"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
             android:textColor="?attr/colorError"
             android:textSize="16sp" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

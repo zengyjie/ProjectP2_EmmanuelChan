@@ -32,12 +32,13 @@
             android:textSize="16sp" />
 
         <EditText
-            android:id="@+id/searchBar"
+            android:id="@+id/fridgeNameEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="text"
-            android:text="New fridge" />
+            android:text="New fridge"
+            android:textCursorDrawable="@null" />
 
         <TextView
             android:id="@+id/textView2"

@@ -22,9 +22,11 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="8"
-            android:ems="10"
+            android:backgroundTint="?attr/colorOnPrimary"
             android:hint="Search for a wine..."
-            android:inputType="text" />
+            android:inputType="text"
+            android:textCursorDrawable="@null" />
+
 
         <ImageButton
             android:id="@+id/filterButton"
