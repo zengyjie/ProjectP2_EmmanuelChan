@@ -1,11 +1,20 @@
 package com.example.projectp2_emmanuelchan.ui.settings
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -13,25 +22,50 @@ import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuelchan.R
 import com.example.projectp2_emmanuelchan.databinding.FragmentSettingsBinding
 import com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import java.io.File
 
 class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
+    private lateinit var auth: FirebaseAuth
     private lateinit var credentialManager: CredentialManager
+    private lateinit var signInClient: SignInClient
+
+    companion object {
+        private const val TAG = "SettingsFragment"
+        private const val WEB_CLIENT_ID = "1000486878358-3s8eb23gbcldg8556k5ctnj379dk2tva.apps.googleusercontent.com" // Replace with your Web Client ID
+    }
+
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        try {
+            val credential = Identity.getSignInClient(requireActivity())
+                .getSignInCredentialFromIntent(result.data)
+            val idToken = credential.googleIdToken
+
+            if (idToken != null) {
+                // Got an ID token from Google. Use it to authenticate with Firebase.
+                firebaseAuthWithGoogle(idToken)
+            } else {
+                Log.d(TAG, "No ID token!")
+                Toast.makeText(requireContext(), "Sign in failed", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: ApiException) {
+            Log.w(TAG, "Google sign in failed", e)
+            Toast.makeText(requireContext(), "Sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +75,39 @@ class SettingsFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+
+        // Initialize Google Sign-In client
+        signInClient = Identity.getSignInClient(requireActivity())
+
+        // Initialize Credential Manager
+        credentialManager = CredentialManager.create(requireContext())
+
+        // Set up theme spinner
+        setupThemeSpinner()
+
+        // Update UI based on current sign-in state
+        updateUI(auth.currentUser)
+
+        binding.accountButton.setOnClickListener {
+            if (auth.currentUser != null) {
+                // User is signed in, show sign out dialog
+                showSignOutDialog()
+            } else {
+                // User is not signed in, start sign-in flow
+                signIn()
+            }
+        }
+
+        binding.clearAllButton.setOnClickListener {
+            showClearDataDialog()
+        }
+
+        return root
+    }
+
+    private fun setupThemeSpinner() {
         val themeSpinner: Spinner = binding.themeSpinner
         val themes = arrayOf("Default", "Dark")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, themes)
@@ -60,129 +127,117 @@ class SettingsFragment : Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-
-        setupSignIn()
-
-        binding.clearAllButton.setOnClickListener {
-            val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
-            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setView(confirmDeleteView)
-            val deleteDialog = confirmDialogBuilder.create()
-
-            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
-
-            confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
-                val wineWiseDir = File(requireContext().filesDir, "WineWise")
-                if (wineWiseDir.exists() && wineWiseDir.isDirectory) {
-                    wineWiseDir.listFiles()?.forEach { file ->
-                        if (!file.delete()) { file.deleteOnExit() }
-                    }
-                }
-                fridges.clear()
-                sharedPreferences.edit().clear().apply()
-                FridgesFragment.saveFridges(requireContext())
-                deleteDialog.dismiss()
-                Toast.makeText(requireContext(), "All data cleared successfully", Toast.LENGTH_SHORT).show()
-            }
-
-
-            confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
-                deleteDialog.dismiss()
-            }
-
-            deleteDialog.show()
-        }
-
-
-        return root
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun setupSignIn() {
-        credentialManager = CredentialManager.create(requireContext())
-        updateUI()
-
-        binding.accountButton.setOnClickListener {
-            if (FirebaseAuth.getInstance().currentUser != null) {
-                signOut()
-            } else {
-                signIn()
-            }
-        }
     }
 
     private fun signIn() {
         lifecycleScope.launch {
             try {
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setAutoSelectEnabled(false)
-                    .setServerClientId(requireContext().getString(R.string.default_web_client_id))
+                val request = BeginSignInRequest.builder()
+                    .setGoogleIdTokenRequestOptions(
+                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                            .setSupported(true)
+                            .setServerClientId(WEB_CLIENT_ID)
+                            .setFilterByAuthorizedAccounts(false)
+                            .build()
+                    )
+                    .setAutoSelectEnabled(true)
                     .build()
 
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-
-                val result: GetCredentialResponse =
-                    credentialManager.getCredential(requireContext(), request)
-
-                val credential = result.credential
-                if (credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    val idToken = GoogleIdTokenCredential.createFrom(credential.data)
-                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken.toString(), null)
-                    val result = FirebaseAuth.getInstance().signInWithCredential(firebaseCredential).await()
-                    println(result.user)
-                }
+                val result = signInClient.beginSignIn(request).await()
+                val intentSenderRequest = IntentSenderRequest.Builder(result.pendingIntent).build()
+                signInLauncher.launch(intentSenderRequest)
             } catch (e: Exception) {
-                Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
+                Log.e(TAG, "Error starting sign-in flow", e)
+                Toast.makeText(requireContext(), "Could not start sign-in flow: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        lifecycleScope.launch {
-            try {
-                val result = FirebaseAuth.getInstance().signInWithCredential(credential).await()
-                println(result.user)
-                if (result.user != null) {
-                    updateUI()
-                    Toast.makeText(context, "Sign-in successful", Toast.LENGTH_SHORT).show()
+
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(requireActivity()) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = auth.currentUser
+                    updateUI(user)
+                    Toast.makeText(requireContext(), "Signed in as ${user?.displayName}", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Sign-in failed", Toast.LENGTH_SHORT).show()
+                    // Sign in failed
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Toast.makeText(requireContext(), "Authentication failed", Toast.LENGTH_SHORT).show()
+                    updateUI(null)
                 }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-        }
     }
 
-    private fun signOut() {
-        lifecycleScope.launch {
-            try {
-                FirebaseAuth.getInstance().signOut()
-                updateUI()
-                Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(context, "Sign-out failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+    private fun showSignOutDialog() {
+        val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+        val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setView(confirmDeleteView)
+        val deleteDialog = confirmDialogBuilder.create()
+
+        deleteDialog.findViewById<TextView>(R.id.nameTextView)?.text = "Are you sure you want to sign out?"
+        deleteDialog.findViewById<Button>(R.id.noButton)?.setOnClickListener { deleteDialog.dismiss() }
+        deleteDialog.findViewById<Button>(R.id.yesButton)?.setOnClickListener {
+            auth.signOut()
+            updateUI(null)
+            Toast.makeText(requireContext(), "Signed out successfully", Toast.LENGTH_SHORT).show()
+            deleteDialog.dismiss()
         }
+        deleteDialog.show()
     }
 
-    private fun updateUI() {
-        val user = FirebaseAuth.getInstance().currentUser
+    private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
-            binding.accountTextView.text = user.displayName ?: "User"
-            binding.accountButton.text = "Logout"
+            binding.accountButton.text = "Sign Out"
+            binding.accountTextView.text = user.displayName
         } else {
-            binding.accountTextView.text = "Not Signed In"
             binding.accountButton.text = "Sign In"
+            binding.accountTextView.text = "Not logged in"
         }
+    }
+
+    private fun showClearDataDialog() {
+        val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+        val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setView(confirmDeleteView)
+        val deleteDialog = confirmDialogBuilder.create()
+
+        confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
+
+        confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+            val wineWiseDir = File(requireContext().filesDir, "WineWise")
+            if (wineWiseDir.exists() && wineWiseDir.isDirectory) {
+                wineWiseDir.listFiles()?.forEach { file ->
+                    if (!file.delete()) { file.deleteOnExit() }
+                }
+            }
+            fridges.clear()
+            val sharedPreferences = requireActivity().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            // Keep the user signed in even after clearing app data
+            val signedInUser = auth.currentUser != null
+            sharedPreferences.edit().clear().apply()
+            if (signedInUser) {
+                // Preserve that the user is signed in
+                sharedPreferences.edit { putBoolean("user_signed_in", true) }
+            }
+            FridgesFragment.saveFridges(requireContext())
+            deleteDialog.dismiss()
+            Toast.makeText(requireContext(), "All data cleared successfully", Toast.LENGTH_SHORT).show()
+        }
+
+        confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
+            deleteDialog.dismiss()
+        }
+
+        deleteDialog.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
