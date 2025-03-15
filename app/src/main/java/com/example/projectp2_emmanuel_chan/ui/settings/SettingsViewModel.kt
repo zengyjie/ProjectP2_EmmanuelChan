@@ -1,4 +1,4 @@
-package com.example.projectp2_emmanuelchan.ui.settings
+package com.example.projectp2_emmanuel_chan.ui.settings
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

@@ -66,7 +66,7 @@
                 android:textAlignment="viewStart" />
 
             <Button
-                android:id="@+id/accountButton"
+                android:id="@+id/loginButton"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:layout_marginRight="8dp"
@@ -80,6 +80,18 @@
                 android:textSize="14sp" />
 
         </LinearLayout>
+
+        <Button
+            android:id="@+id/accountSettingsButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:text=" Account settings"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/clearAllButton"

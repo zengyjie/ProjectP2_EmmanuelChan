@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/navigation_fridges"
-        android:name="com.example.projectp2_emmanuelchan.ui.fridges.FridgesFragment"
+        android:name="com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_fridges" />
 
     <fragment
         android:id="@+id/navigation_wines"
-        android:name="com.example.projectp2_emmanuelchan.ui.wines.WinesFragment"
+        android:name="com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_wines" />
 
     <fragment
         android:id="@+id/navigation_settings"
-        android:name="com.example.projectp2_emmanuelchan.ui.settings.SettingsFragment"
+        android:name="com.example.projectp2_emmanuel_chan.ui.settings.SettingsFragment"
         android:label="@string/title_settings"
         tools:layout="@layout/fragment_settings" />
 </navigation>

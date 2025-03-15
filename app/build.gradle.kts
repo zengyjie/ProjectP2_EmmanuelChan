@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.projectp2_emmanuelchan"
+    namespace = "com.example.projectp2_emmanuel_chan"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.projectp2_emmanuelchan"
+        applicationId = "com.example.projectp2_emmanuel_chan"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -61,4 +61,5 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
 }

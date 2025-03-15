@@ -1,4 +1,4 @@
-package com.example.projectp2_emmanuelchan.ui.custom
+package com.example.projectp2_emmanuel_chan.ui.custom
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.example.projectp2_emmanuelchan.R
+import com.example.projectp2_emmanuel_chan.R
 
 class CustomSpinner : LinearLayout {
     private var countTextView: TextView? = null

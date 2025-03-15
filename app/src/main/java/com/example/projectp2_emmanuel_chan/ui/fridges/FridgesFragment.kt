@@ -1,4 +1,4 @@
-package com.example.projectp2_emmanuelchan.ui.fridges
+package com.example.projectp2_emmanuel_chan.ui.fridges
 
 import android.content.Context
 import android.content.Intent
@@ -19,13 +19,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectp2_emmanuelchan.FridgeActivity
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.fridges
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.origSelectedFridge
-import com.example.projectp2_emmanuelchan.MainActivity.Companion.selectedFridge
-import com.example.projectp2_emmanuelchan.R
-import com.example.projectp2_emmanuelchan.databinding.FragmentFridgesBinding
-import com.example.projectp2_emmanuelchan.ui.custom.CustomSpinner
+import com.example.projectp2_emmanuel_chan.FridgeActivity
+import com.example.projectp2_emmanuel_chan.MainActivity.Companion.fridges
+import com.example.projectp2_emmanuel_chan.MainActivity.Companion.origSelectedFridge
+import com.example.projectp2_emmanuel_chan.MainActivity.Companion.selectedFridge
+import com.example.projectp2_emmanuel_chan.R
+import com.example.projectp2_emmanuel_chan.databinding.FragmentFridgesBinding
+import com.example.projectp2_emmanuel_chan.ui.custom.CustomSpinner
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.Serializable
 import com.google.gson.Gson

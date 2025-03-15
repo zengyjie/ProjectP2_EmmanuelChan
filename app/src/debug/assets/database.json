@@ -11,7 +11,7 @@
       "price": 800,
       "drinkBy": 2050,
       "description": "An elegant and powerful wine with deep red fruit flavors, fine tannins, and notes of violets and tobacco.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/Margaux2015.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/Margaux2015.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -28,7 +28,7 @@
       "price": 300,
       "drinkBy": 2040,
       "description": "Rich and complex with blackcurrant, cedar, and spice. A long and refined finish.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/Sassicaia2018.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/Sassicaia2018.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -45,7 +45,7 @@
       "price": 450,
       "drinkBy": 2045,
       "description": "Deep and velvety with notes of blackberries, dark chocolate, and espresso.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/OpusOne2016.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/OpusOne2016.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -62,7 +62,7 @@
       "price": 25000,
       "drinkBy": 2060,
       "description": "One of the most sought-after wines in the world, known for its finesse, floral aromatics, and exceptional aging potential.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/Domaine2014.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/Domaine2014.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -79,7 +79,7 @@
       "price": 35,
       "drinkBy": 2030,
       "description": "Crisp and refreshing with bright citrus and tropical fruit notes.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/CloudyBay2022.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/CloudyBay2022.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -96,7 +96,7 @@
       "price": 700,
       "drinkBy": 2055,
       "description": "A full-bodied, bold wine with dark berries, licorice, and oak spice.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/PenfoldsGrange2016.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/PenfoldsGrange2016.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -113,7 +113,7 @@
       "price": 120,
       "drinkBy": 2070,
       "description": "Aged port with intense dark fruit, spice, and chocolatey notes.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/TaylorsVintagePort2011.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/TaylorsVintagePort2011.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -130,7 +130,7 @@
       "price": 75,
       "drinkBy": 2060,
       "description": "A luscious dessert wine with honey, apricot, and orange peel flavors.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/Tokaji2019.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/Tokaji2019.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false
@@ -147,7 +147,7 @@
       "price": 400,
       "drinkBy": 2080,
       "description": "The world’s most famous sweet wine, with rich honeyed flavors and incredible balance.",
-      "imagePath": "/data/user/0/com.example.projectp2_emmanuelchan/files/WineWise/ChateauDYquem2009.jpg",
+      "imagePath": "/data/user/0/com.example.projectp2_emmanuel_chan/files/WineWise/ChateauDYquem2009.jpg",
       "parentFridge": "database",
       "pairings": "",
       "drunk": false

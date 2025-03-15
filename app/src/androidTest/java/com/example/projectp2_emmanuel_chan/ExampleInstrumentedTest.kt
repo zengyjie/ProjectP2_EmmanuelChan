@@ -1,4 +1,4 @@
-package com.example.projectp2_emmanuelchan
+package com.example.projectp2_emmanuel_chan
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
