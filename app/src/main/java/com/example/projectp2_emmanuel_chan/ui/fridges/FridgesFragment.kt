@@ -204,7 +204,7 @@ class FridgesFragment : Fragment() {
             val newFridge = readFridgeData(dialogView, edit = true)
             if (newFridge.name == "InvalidName") { newFridge.name = fridge.name }
             editFridge(fridge, newFridge)
-            toast("success")
+            toast("Edit successful")
             dialog.dismiss()
         }
 

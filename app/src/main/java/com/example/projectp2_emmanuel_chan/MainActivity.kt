@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo firebase images, formatPicture, revertImage, addwine/fridge, saveLayout
+//todo firebase images, formatPicture
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -43,13 +43,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("AppPreferences", MODE_PRIVATE)
         when (sharedPreferences.getInt("theme", 0)) {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
         }
         extractAssets()
-
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)

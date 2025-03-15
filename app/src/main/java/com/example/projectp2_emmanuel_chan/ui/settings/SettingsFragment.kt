@@ -1,6 +1,7 @@
 package com.example.projectp2_emmanuel_chan.ui.settings
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -21,10 +22,13 @@ import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -37,16 +41,10 @@ class SettingsFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     private lateinit var credentialManager: CredentialManager
     private lateinit var signInClient: SignInClient
-    private val WEB_CLIENT_ID get() = context?.getString(R.string.default_web_client_id) ?: ""
     private lateinit var db: FirebaseFirestore
+    private val WEB_CLIENT_ID get() = context?.getString(R.string.default_web_client_id) ?: ""
     private val gson = Gson()
-
-
-    companion object {
-        private const val TAG = "SettingsFragment"
-    }
-
-
+    private val storage = FirebaseStorage.getInstance()
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -62,6 +60,10 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    companion object {
+        private const val TAG = "SettingsFragment"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -75,6 +77,9 @@ class SettingsFragment : Fragment() {
         credentialManager = CredentialManager.create(requireContext())
         db = FirebaseFirestore.getInstance()
 
+        Log.d("Firebase", "Project ID: ${FirebaseApp.getInstance().options.projectId}")
+        Log.d("Firebase", "Storage Bucket: ${FirebaseApp.getInstance().options.storageBucket}")
+        Log.d("Firebase", "Current user: ${FirebaseAuth.getInstance().currentUser?.uid}")
 
         setupThemeSpinner()
         updateUI(auth.currentUser)
@@ -188,19 +193,19 @@ class SettingsFragment : Fragment() {
             .setView(accountSettingsView)
         val accountSettingsDialog = accountSettingsDialogBuilder.create()
 
-        accountSettingsDialog.show()
+        accountSettingsView.findViewById<TextView>(R.id.accountDialogTextView)?.text = auth.currentUser?.displayName
 
-        accountSettingsDialog.findViewById<Button>(R.id.saveDataButton)?.setOnClickListener {
-            uploadDataToCloud()
+        accountSettingsView.findViewById<Button>(R.id.saveDataButton)?.setOnClickListener {
+            uploadData()
             accountSettingsDialog.dismiss()
         }
 
-        accountSettingsDialog.findViewById<Button>(R.id.loadDataButton)?.setOnClickListener {
-            downloadDataFromCloud()
+        accountSettingsView.findViewById<Button>(R.id.loadDataButton)?.setOnClickListener {
+            downloadData()
             accountSettingsDialog.dismiss()
         }
 
-        accountSettingsDialog.findViewById<Button>(R.id.clearDataButton)?.setOnClickListener {
+        accountSettingsView.findViewById<Button>(R.id.clearDataButton)?.setOnClickListener {
             val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
             val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setView(confirmDeleteView)
@@ -219,6 +224,8 @@ class SettingsFragment : Fragment() {
 
             deleteDialog.show()
         }
+
+        accountSettingsDialog.show()
     }
 
     private fun showClearDataDialog() {
@@ -255,32 +262,61 @@ class SettingsFragment : Fragment() {
         deleteDialog.show()
     }
 
-    private fun uploadDataToCloud() {
+    private fun uploadData() {
         val user = auth.currentUser ?: return
         Toast.makeText(requireContext(), "Uploading data...", Toast.LENGTH_SHORT).show()
-        val fridgesJson = gson.toJson(fridges)
 
+        // Upload JSON data
+        val fridgesJson = gson.toJson(fridges)
         val userData = hashMapOf(
             "fridges" to fridgesJson,
             "theme" to requireActivity().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE).getInt("theme", 0),
             "lastSync" to System.currentTimeMillis()
         )
 
+        // Upload Firestore document
         db.collection("users")
             .document(user.uid)
             .set(userData)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Data uploaded successfully", Toast.LENGTH_SHORT).show()
+                // After JSON is uploaded, upload all images from WineWise directory
+                uploadWineWiseDirectory(user.uid)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Upload failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun downloadDataFromCloud() {
+    private fun uploadWineWiseDirectory(userId: String) {
+        val directory = File(requireContext().filesDir, "WineWise")
+        if (!directory.exists() || directory.listFiles()?.isEmpty() == true) {
+            Toast.makeText(requireContext(), "No images to upload", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        var successCount = 0
+        val totalFiles = directory.listFiles()?.size ?: 0
+
+        directory.listFiles()?.forEach { file ->
+            val storageRef = storage.reference.child("users/$userId/WineWise/${file.name}")
+            val uploadTask = storageRef.putFile(Uri.fromFile(file))
+
+            uploadTask.addOnSuccessListener {
+                successCount++
+                if (successCount == totalFiles) {
+                    Toast.makeText(requireContext(), "Data uploaded successfully", Toast.LENGTH_SHORT).show()
+                }
+            }.addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to upload images", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun downloadData() {
         val user = auth.currentUser ?: return
         Toast.makeText(requireContext(), "Downloading data...", Toast.LENGTH_SHORT).show()
 
+        // First download JSON data
         db.collection("users")
             .document(user.uid)
             .get()
@@ -294,15 +330,15 @@ class SettingsFragment : Fragment() {
 
                             fridges.clear()
                             fridges.addAll(downloadedFridges)
-                            FridgesFragment.saveFridges(requireContext())
+
+                            // Download WineWise directory
+                            downloadWineWiseDirectory(user.uid)
 
                             document.getLong("theme")?.toInt()?.let { theme ->
                                 requireActivity().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE).edit {
                                     putInt("theme", theme)
                                 }
                             }
-
-                            Toast.makeText(requireContext(), "Data downloaded successfully", Toast.LENGTH_SHORT).show()
                         } else {
                             Toast.makeText(requireContext(), "No cloud data found", Toast.LENGTH_SHORT).show()
                         }
@@ -318,14 +354,68 @@ class SettingsFragment : Fragment() {
             }
     }
 
+    private fun downloadWineWiseDirectory(userId: String) {
+        // Create/clear local directory
+        val directory = File(requireContext().filesDir, "WineWise")
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        // Get reference to WineWise directory in Firebase Storage
+        val wineWiseRef = storage.reference.child("users/$userId/WineWise")
+
+        wineWiseRef.listAll()
+            .addOnSuccessListener { listResult ->
+                if (listResult.items.isEmpty()) {
+                    FridgesFragment.saveFridges(requireContext())
+                    Toast.makeText(requireContext(), "Data downloaded successfully", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                var downloadCount = 0
+                listResult.items.forEach { item ->
+                    val fileName = item.name
+                    val localFile = File(directory, fileName)
+
+                    item.getFile(localFile)
+                        .addOnSuccessListener {
+                            downloadCount++
+                            if (downloadCount == listResult.items.size) {
+                                FridgesFragment.saveFridges(requireContext())
+                                Toast.makeText(requireContext(), "Data downloaded successfully", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(requireContext(), "Error downloading images", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Error listing images", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun clearCloudData() {
         val user = auth.currentUser ?: return
+        Toast.makeText(requireContext(), "Clearing user data...", Toast.LENGTH_SHORT).show()
 
-        db.collection("users")
-            .document(user.uid)
-            .delete()
-            .addOnSuccessListener { Toast.makeText(requireContext(), "Cloud data cleared", Toast.LENGTH_SHORT).show() }
-            .addOnFailureListener { e -> Toast.makeText(requireContext(), "Failed to clear cloud data", Toast.LENGTH_SHORT).show() }
+        // Delete Firebase Storage directory
+        storage.reference.child("users/${user.uid}/WineWise").listAll()
+            .addOnSuccessListener { listResult ->
+                val deletePromises = listResult.items.map { it.delete() }
+
+                Tasks.whenAllComplete(deletePromises).addOnSuccessListener {
+                    // Delete Firestore document
+                    db.collection("users")
+                        .document(user.uid)
+                        .delete()
+                        .addOnSuccessListener { Toast.makeText(requireContext(), "Cloud data cleared", Toast.LENGTH_SHORT).show() }
+                        .addOnFailureListener { Toast.makeText(requireContext(), "Failed to clear cloud data", Toast.LENGTH_SHORT).show() }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to clear images", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onDestroyView() {

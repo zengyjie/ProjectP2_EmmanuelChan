@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="?android:colorBackground"
     android:padding="16dp"
     android:scrollbarSize="0dp">
@@ -12,46 +12,63 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/colorBackground"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/textView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp"
+            android:layout_marginBottom="8dp"
             android:text="Account settings"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurface"
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/saveDataButton"
+        <TextView
+            android:id="@+id/accountDialogTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#00FFFFFF"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:text="save data"
-            android:textAllCaps="true"
-            android:textColor="?attr/colorOnPrimary"
-            android:textSize="14sp"
-            app:backgroundTint="#00FFFFFF"
-            app:cornerRadius="4dp" />
+            android:layout_marginBottom="14dp"
+            android:layout_weight="1"
+            android:text="Not logged in"
+            android:textAlignment="center" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/loadDataButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#00FFFFFF"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:text="Load data"
-            android:textAllCaps="true"
-            android:textColor="?attr/colorOnPrimary"
-            android:textSize="14sp"
-            app:backgroundTint="#00FFFFFF"
-            app:cornerRadius="4dp" />
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveDataButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#00FFFFFF"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="save"
+                android:textAllCaps="true"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="14sp"
+                app:backgroundTint="#00FFFFFF"
+                app:cornerRadius="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loadDataButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#00FFFFFF"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="load"
+                android:textAllCaps="true"
+                android:textColor="?attr/colorOnPrimary"
+                android:textSize="14sp"
+                app:backgroundTint="#00FFFFFF"
+                app:cornerRadius="4dp" />
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/clearDataButton"
@@ -62,7 +79,7 @@
             android:insetBottom="0dp"
             android:text="Clear data"
             android:textAllCaps="true"
-            android:textColor="?attr/colorOnPrimary"
+            android:textColor="?attr/colorError"
             android:textSize="14sp"
             app:backgroundTint="#00FFFFFF"
             app:cornerRadius="4dp" />

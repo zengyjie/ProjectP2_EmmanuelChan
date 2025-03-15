@@ -3,9 +3,11 @@ package com.example.projectp2_emmanuel_chan.ui.custom
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat.getSystemService
 import com.example.projectp2_emmanuel_chan.R
 
 class CustomSpinner : LinearLayout {
@@ -29,7 +31,7 @@ class CustomSpinner : LinearLayout {
     }
 
     private fun init(context: Context) {
-        orientation = HORIZONTAL // Ensure proper layout orientation
+        orientation = HORIZONTAL
         LayoutInflater.from(context).inflate(R.layout.custom_spinner, this, true)
         findViewById<Button>(R.id.decrementButton).setOnClickListener { updateCount(-1) }
         findViewById<Button>(R.id.incrementButton).setOnClickListener { updateCount(1) }

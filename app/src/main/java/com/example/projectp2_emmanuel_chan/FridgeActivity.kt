@@ -143,7 +143,6 @@ class FridgeActivity : AppCompatActivity() {
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         fun editWine(
             context: Context,
             wine: FridgesFragment.Wine,
@@ -321,12 +320,12 @@ class FridgeActivity : AppCompatActivity() {
                     adapter2?.notifyDataSetChanged()
                     deleteDialog.dismiss()
                     dialog.dismiss()
-                    Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${wine.name} saved", Toast.LENGTH_SHORT).show()
                 }
 
                 confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
                     deleteDialog.dismiss()
-                    Toast.makeText(context, "cancelled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Edit cancelled", Toast.LENGTH_SHORT).show()
                 }
 
                 deleteDialog.show()
@@ -457,7 +456,6 @@ class FridgeActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun showAddWineDialog(index: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.wine_add, null)
         val dialog = AlertDialog.Builder(this)
@@ -478,7 +476,7 @@ class FridgeActivity : AppCompatActivity() {
                 searchResultsLayout.visibility = View.GONE
                 return
             }
-
+            searchResultsLayout.visibility = View.VISIBLE
             val filteredWines = wineList.filter { it.name.contains(query, ignoreCase = true) }
             if (filteredWines.isEmpty()) {
                 return
@@ -518,7 +516,9 @@ class FridgeActivity : AppCompatActivity() {
                 updateSearchResults(s.toString())
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                updateSearchResults(s.toString())
+            }
         })
 
         dialogView.findViewById<Button>(R.id.addWineButton).setOnClickListener {
@@ -572,7 +572,6 @@ class FridgeActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun showManualAddWineDialog(
         index: Int,
         cameraLauncher: ActivityResultLauncher<Intent>,
