@@ -195,12 +195,10 @@ class SettingsFragment : Fragment() {
 
         accountSettingsView.findViewById<Button>(R.id.saveDataButton)?.setOnClickListener {
             uploadData()
-            accountSettingsDialog.dismiss()
         }
 
         accountSettingsView.findViewById<Button>(R.id.loadDataButton)?.setOnClickListener {
             downloadData()
-            accountSettingsDialog.dismiss()
         }
 
         accountSettingsView.findViewById<Button>(R.id.clearDataButton)?.setOnClickListener {
