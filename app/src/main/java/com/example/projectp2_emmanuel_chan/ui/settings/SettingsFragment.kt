@@ -1,7 +1,6 @@
 package com.example.projectp2_emmanuel_chan.ui.settings
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,7 +21,6 @@ import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -266,7 +264,6 @@ class SettingsFragment : Fragment() {
         val user = auth.currentUser ?: return
         Toast.makeText(requireContext(), "Uploading data...", Toast.LENGTH_SHORT).show()
 
-        // Upload JSON data
         val fridgesJson = gson.toJson(fridges)
         val userData = hashMapOf(
             "fridges" to fridgesJson,
@@ -274,20 +271,19 @@ class SettingsFragment : Fragment() {
             "lastSync" to System.currentTimeMillis()
         )
 
-        // Upload Firestore document
         db.collection("users")
             .document(user.uid)
             .set(userData)
             .addOnSuccessListener {
-                // After JSON is uploaded, upload all images from WineWise directory
-                uploadWineWiseDirectory(user.uid)
+                uploadImages(user.uid)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Upload failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun uploadWineWiseDirectory(userId: String) {
+    private fun uploadImages(userId: String) {
+        /*
         val directory = File(requireContext().filesDir, "WineWise")
         if (!directory.exists() || directory.listFiles()?.isEmpty() == true) {
             Toast.makeText(requireContext(), "No images to upload", Toast.LENGTH_SHORT).show()
@@ -310,13 +306,13 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Failed to upload images", Toast.LENGTH_SHORT).show()
             }
         }
+    */
     }
 
     private fun downloadData() {
         val user = auth.currentUser ?: return
         Toast.makeText(requireContext(), "Downloading data...", Toast.LENGTH_SHORT).show()
 
-        // First download JSON data
         db.collection("users")
             .document(user.uid)
             .get()
@@ -331,8 +327,7 @@ class SettingsFragment : Fragment() {
                             fridges.clear()
                             fridges.addAll(downloadedFridges)
 
-                            // Download WineWise directory
-                            downloadWineWiseDirectory(user.uid)
+                            downloadImages(user.uid)
 
                             document.getLong("theme")?.toInt()?.let { theme ->
                                 requireActivity().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE).edit {
@@ -354,14 +349,13 @@ class SettingsFragment : Fragment() {
             }
     }
 
-    private fun downloadWineWiseDirectory(userId: String) {
-        // Create/clear local directory
+    private fun downloadImages(userId: String) {
+        /*
         val directory = File(requireContext().filesDir, "WineWise")
         if (!directory.exists()) {
             directory.mkdirs()
         }
 
-        // Get reference to WineWise directory in Firebase Storage
         val wineWiseRef = storage.reference.child("users/$userId/WineWise")
 
         wineWiseRef.listAll()
@@ -393,19 +387,19 @@ class SettingsFragment : Fragment() {
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Error listing images", Toast.LENGTH_SHORT).show()
             }
+    */
     }
 
     private fun clearCloudData() {
+        /*
         val user = auth.currentUser ?: return
         Toast.makeText(requireContext(), "Clearing user data...", Toast.LENGTH_SHORT).show()
 
-        // Delete Firebase Storage directory
         storage.reference.child("users/${user.uid}/WineWise").listAll()
             .addOnSuccessListener { listResult ->
                 val deletePromises = listResult.items.map { it.delete() }
 
                 Tasks.whenAllComplete(deletePromises).addOnSuccessListener {
-                    // Delete Firestore document
                     db.collection("users")
                         .document(user.uid)
                         .delete()
@@ -416,6 +410,7 @@ class SettingsFragment : Fragment() {
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to clear images", Toast.LENGTH_SHORT).show()
             }
+    */
     }
 
     override fun onDestroyView() {
