@@ -50,6 +50,7 @@ import com.example.projectp2_emmanuel_chan.MainActivity.Companion.selectedWine
 import com.example.projectp2_emmanuel_chan.databinding.ActivityFridgeBinding
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.itemLayer
+import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Wine
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.findWine
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.getPairingSuggestion
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.loadImage
@@ -462,6 +463,7 @@ class FridgeActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
+        val wineAddImage = dialogView.findViewById<ImageView>(R.id.wineAddImage)
         val wineNameInput = dialogView.findViewById<TextInputEditText>(R.id.editWineName)
         val wineNotesInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
         val winePriceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
@@ -471,6 +473,7 @@ class FridgeActivity : AppCompatActivity() {
         val wineList: List<FridgesFragment.Wine> = loadDB(this)
 
         fun updateSearchResults(query: String) {
+            presetSelected = false
             searchResultsLayout.removeAllViews()
             if (query.isEmpty()) {
                 searchResultsLayout.visibility = View.GONE
@@ -497,13 +500,15 @@ class FridgeActivity : AppCompatActivity() {
                     wineNameInput.setText(wine.name)
                     wineNotesInput.setText(wine.description)
                     winePriceInput.setText(wine.price.toString())
-                    loadImage(wine.imagePath, dialogView.findViewById(R.id.wineAddImage))
+                    loadImage(wine.imagePath, wineAddImage)
                     searchResultsLayout.visibility = View.GONE
                     val imm = this.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(dialogView.windowToken, 0)
-                    dialog.findViewById<EditText>(R.id.editWineName).clearFocus()
-                    dialog.findViewById<EditText>(R.id.editDescription).clearFocus()
-                    dialog.findViewById<EditText>(R.id.editPrice).clearFocus()
+                    wineNameInput.clearFocus()
+                    wineNameInput.isClickable = false
+                    wineNameInput.isFocusable = false
+                    wineNotesInput.clearFocus()
+                    winePriceInput.clearFocus()
                     presetSelected = true
                 }
 
@@ -520,6 +525,20 @@ class FridgeActivity : AppCompatActivity() {
                 updateSearchResults(s.toString())
             }
         })
+
+        dialogView.findViewById<ImageButton>(R.id.clearNameButton).setOnClickListener {
+            presetSelected = false
+            wineAddImage.setImageResource(R.drawable.bottle_front)
+            wineNameInput.text?.clear()
+            wineNameInput.isClickable = true
+            wineNameInput.isFocusable = true
+            wineNameInput.isFocusableInTouchMode = true
+            wineNotesInput.text?.clear()
+            winePriceInput.text?.clear()
+            wineNameInput.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(wineNameInput, InputMethodManager.SHOW_IMPLICIT)
+        }
 
         dialogView.findViewById<Button>(R.id.addWineButton).setOnClickListener {
             if (!presetSelected) {
