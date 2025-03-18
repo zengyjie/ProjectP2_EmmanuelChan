@@ -17,7 +17,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-//todo formatPicture
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
