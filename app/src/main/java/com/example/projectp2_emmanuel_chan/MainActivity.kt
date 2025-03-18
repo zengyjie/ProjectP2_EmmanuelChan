@@ -1,10 +1,10 @@
 package com.example.projectp2_emmanuel_chan
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
-import android.widget.Adapter
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -14,7 +14,6 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.projectp2_emmanuel_chan.databinding.ActivityMainBinding
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Fridge
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Wine
-import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Filter
 import java.io.File
 import java.io.FileOutputStream
@@ -53,8 +52,13 @@ class MainActivity : AppCompatActivity() {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
         }
+        if (!sharedPreferences.getBoolean("has_run", true)) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+        }
+
         extractAssets()
-        sharedPreferences.edit { putBoolean("first_run", false) }
+
+        sharedPreferences.edit { putBoolean("has_run", true) }
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -84,7 +88,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun extractAssets() {
-        val sharedPreferences = getSharedPreferences("AppPreferences", MODE_PRIVATE)
         val assetManager = assets
         val files = assetManager.list("wineImages") ?: return
 

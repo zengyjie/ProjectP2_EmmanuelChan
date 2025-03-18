@@ -15,6 +15,7 @@
         android:background="?android:attr/colorBackground"
         android:scaleType="centerCrop"
         app:srcCompat="@drawable/bottle_front"
+        app:tint="?attr/colorSecondary"
         tools:srcCompat="@drawable/bottle_front" />
 
 </androidx.cardview.widget.CardView>

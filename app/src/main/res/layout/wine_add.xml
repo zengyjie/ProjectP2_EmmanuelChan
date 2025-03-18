@@ -74,7 +74,8 @@
                     android:layout_gravity="center_vertical"
                     android:layout_weight="0"
                     android:background="#00FFFFFF"
-                    app:srcCompat="@drawable/ic_clear" />
+                    app:srcCompat="@drawable/ic_clear"
+                    app:tint="?attr/colorSecondary" />
 
             </LinearLayout>
 

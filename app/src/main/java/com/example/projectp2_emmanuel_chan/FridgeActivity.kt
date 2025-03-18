@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
@@ -63,6 +65,7 @@ import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import androidx.core.graphics.toColorInt
 
 class FridgeActivity : AppCompatActivity() {
 
@@ -1019,7 +1022,7 @@ class FridgeActivity : AppCompatActivity() {
                 if (wine == null || wine.name == "null") { wineImageView.setImageResource(R.drawable.ic_add) }
                 else if (highlightedWineName == wine.name) {
                     highlightedWineName = "null"
-                    wineImageView.setImageResource(R.drawable.bottle_front_highlight)
+                    wineImageView.setColorFilter("#EE5555".toColorInt(), PorterDuff.Mode.SRC_IN)
                 }
                 else { wineImageView.setImageResource(R.drawable.bottle_front) }
             }

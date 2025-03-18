@@ -206,8 +206,22 @@ class SettingsFragment : Fragment() {
         }
 
         accountSettingsDialog.findViewById<Button>(R.id.loadDataButton)?.setOnClickListener {
-            downloadDataFromCloud()
-            accountSettingsDialog.dismiss()
+            val confirmView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(confirmView)
+            val confirmDialog = confirmDialogBuilder.create()
+
+            confirmView.findViewById<TextView>(R.id.nameTextView).text = "Load data? This will overwrite current data."
+            confirmView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                downloadDataFromCloud()
+                confirmDialog.dismiss()
+                accountSettingsDialog.dismiss()
+            }
+            confirmView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                confirmDialog.dismiss()
+            }
+
+            confirmDialog.show()
         }
 
         accountSettingsDialog.findViewById<Button>(R.id.clearDataButton)?.setOnClickListener {

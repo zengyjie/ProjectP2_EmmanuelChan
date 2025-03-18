@@ -186,12 +186,13 @@ class FridgesFragment : Fragment() {
                 .setView(confirmDeleteView)
             val deleteDialog = confirmDialogBuilder.create()
 
-            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${fridge.name}?"
+            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Delete ${fridge.name}? All wines in this fridge will be lost."
 
             confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
                 removeFridge(fridge)
                 deleteDialog.dismiss()
                 dialog.dismiss()
+                toast("Deleted ${fridge.name}")
             }
 
             confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {

@@ -72,7 +72,8 @@
                 android:layout_gravity="right"
                 android:layout_weight="1"
                 android:background="#00FFFFFF"
-                app:srcCompat="@drawable/ic_add" />
+                app:srcCompat="@drawable/ic_add"
+                app:tint="?attr/colorSecondary" />
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
