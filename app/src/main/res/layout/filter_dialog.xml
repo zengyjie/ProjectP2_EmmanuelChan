@@ -53,7 +53,8 @@
         <CheckBox
             android:id="@+id/yearCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -83,7 +84,8 @@
         <CheckBox
             android:id="@+id/typeCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -111,7 +113,8 @@
         <CheckBox
             android:id="@+id/vineyardCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -139,7 +142,8 @@
         <CheckBox
             android:id="@+id/regionCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -167,7 +171,8 @@
         <CheckBox
             android:id="@+id/countryCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -228,7 +233,8 @@
         <CheckBox
             android:id="@+id/ratingCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -289,7 +295,8 @@
         <CheckBox
             android:id="@+id/priceCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <LinearLayout
@@ -312,7 +319,8 @@
         <CheckBox
             android:id="@+id/drunkCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:buttonTint="?attr/colorOnPrimary" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton

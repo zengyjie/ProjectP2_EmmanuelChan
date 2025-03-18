@@ -31,6 +31,7 @@ import java.io.Serializable
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
+import android.view.MotionEvent
 
 class FridgesFragment : Fragment() {
 
@@ -352,12 +353,18 @@ class FridgesFragment : Fragment() {
             }
 
             holder.fridgeWineCountTextView.text = "Wines: $filledSlots/$totalWines"
-
             holder.itemView.setOnClickListener { onFridgeClick(fridge) }
-
-            holder.itemView.setOnLongClickListener {
-                onFridgeLongClick(fridge)
-                true
+            holder.itemView.setOnLongClickListener { onFridgeLongClick(fridge); true }
+            holder.itemView.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(150).start()
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                    }
+                }
+                false
             }
         }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
+import android.widget.Adapter
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -13,10 +14,14 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.projectp2_emmanuel_chan.databinding.ActivityMainBinding
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Fridge
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Wine
+import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment
+import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Filter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import androidx.core.content.edit
 
+//todo onboarding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         var highlightedWineName: String = "null"
         var selectedFridge: Fridge = Fridge()
         var origSelectedFridge: Fridge = Fridge()
+        var filter: Filter = Filter()
 
         fun getFridge(name: String): Int {
             for ((i, f) in fridges.withIndex()) {
@@ -48,6 +54,7 @@ class MainActivity : AppCompatActivity() {
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
         }
         extractAssets()
+        sharedPreferences.edit { putBoolean("first_run", false) }
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -77,10 +84,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun extractAssets() {
-        val sharedPreferences = getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-        val isFirstRun = sharedPreferences.getBoolean("first_run", true)
-        if (!isFirstRun) return
-
+        val sharedPreferences = getSharedPreferences("AppPreferences", MODE_PRIVATE)
         val assetManager = assets
         val files = assetManager.list("wineImages") ?: return
 
@@ -106,8 +110,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        sharedPreferences.edit().putBoolean("first_run", false).apply()
     }
-
 }

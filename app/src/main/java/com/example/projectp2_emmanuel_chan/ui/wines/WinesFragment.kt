@@ -10,10 +10,10 @@ import android.graphics.BitmapFactory
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -38,6 +38,7 @@ import com.example.projectp2_emmanuel_chan.FridgeActivity.Companion.loadDB
 import com.example.projectp2_emmanuel_chan.FridgeActivity.Companion.saveImageBm
 import com.example.projectp2_emmanuel_chan.FridgeActivity.Companion.saveImageUri
 import com.example.projectp2_emmanuel_chan.FridgeActivity.Companion.selectedImageView
+import com.example.projectp2_emmanuel_chan.MainActivity.Companion.filter
 import com.example.projectp2_emmanuel_chan.MainActivity.Companion.fridges
 import com.example.projectp2_emmanuel_chan.MainActivity.Companion.getFridge
 import com.example.projectp2_emmanuel_chan.MainActivity.Companion.highlightedWineName
@@ -51,6 +52,7 @@ import com.example.projectp2_emmanuel_chan.databinding.FragmentWinesBinding
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.fridgeToOpen
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.itemLayer
+import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.loadFridges
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.saveFridges
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.textfield.TextInputEditText
@@ -68,18 +70,8 @@ class WinesFragment : Fragment() {
     private val allMyWines = mutableListOf<FridgesFragment.Wine>()
     private var currentWineSet = allMyWines
     private var currentWineSetName = "my"
-    private var filter = Filter()
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
-    private var capturedImage: Bitmap? = null
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) {
-            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(cameraIntent)
-        } else {
-            Toast.makeText(requireContext() , "Camera permission denied", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
@@ -112,7 +104,8 @@ class WinesFragment : Fragment() {
             }
         }
         allWinesRecyclerView.adapter = allWinesAdapter
-        filterWines(Filter(), allMyWines)
+        if (binding.myWinesToggleButton.isChecked) { filterWines(filter, allMyWines) }
+        else { filterWines(filter, databaseWines) }
 
         binding.filterButton.setOnClickListener { showFilterDialog() }
         binding.searchBar.text = null
@@ -304,6 +297,7 @@ class WinesFragment : Fragment() {
                     val selectedFridge = fridges[getFridge(selectedFridgeName ?: "")]
                     selectedIndices = findWine(fridges[getFridge("drunk")], wine).toMutableList()
                     if (selectedFridge.name != "null") {
+                        this.onPause()
                         moveMode = "putBack"
                         FridgesFragment.openFridge(selectedFridge, requireContext())
                         dialog1.dismiss()
@@ -633,8 +627,20 @@ class WinesFragment : Fragment() {
     }
 
     override fun onResume() {
+        loadFridges(requireContext())
+        print(fridges[getFridge("drunk")])
+        allMyWines.clear()
+        for (fridge in fridges) {
+            for (l in fridge.wines.indices) {
+                for (s in fridge.wines[l].indices) {
+                    for (r in fridge.wines[l][s].indices) {
+                        for (c in fridge.wines[l][s][r].indices) {
+                            val wine = fridge.wines[l][s][r][c]
+                            if (wine.name != "null") { allMyWines.add(wine)}
+                        } } } } }
+        if (binding.myWinesToggleButton.isChecked) { filterWines(filter, allMyWines) }
+        else { filterWines(filter, loadDB(requireContext()).toMutableList()) }
         super.onResume()
-        binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
     }
 
     //adapter
@@ -665,6 +671,17 @@ class WinesFragment : Fragment() {
             holder.wineNameTextView.text = tempWine.name
             holder.wineDescTextView.text = tempWine.year.toString()
             holder.itemView.setOnClickListener { onWineClick(tempWine) }
+            holder.itemView.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(150).start()
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                    }
+                }
+                false
+            }
         }
 
         fun updateList(newWines: List<FridgesFragment.Wine>) {

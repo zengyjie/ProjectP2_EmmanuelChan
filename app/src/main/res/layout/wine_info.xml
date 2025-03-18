@@ -31,7 +31,7 @@
             android:layout_height="200dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             app:srcCompat="@drawable/bottle_front" />
 
         <com.google.android.material.textview.MaterialTextView

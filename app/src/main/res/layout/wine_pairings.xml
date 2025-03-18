@@ -35,7 +35,8 @@
             android:inputType="textMultiLine"
             android:minHeight="100dp"
             android:padding="12dp"
-            android:text="[Item 1]\n[item 2]" />
+            android:text="[Item 1]\n[item 2]"
+            android:textCursorDrawable="@null" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/revertPairingsButton"

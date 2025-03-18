@@ -67,15 +67,11 @@ class SettingsFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
-
-        // Initialize Google Sign-In client
         signInClient = Identity.getSignInClient(requireActivity())
-
-        // Initialize Credential Manager
         credentialManager = CredentialManager.create(requireContext())
         db = FirebaseFirestore.getInstance()
+
         setupThemeSpinner()
         updateUI(auth.currentUser)
         binding.loginButton.setOnClickListener {
@@ -189,8 +185,24 @@ class SettingsFragment : Fragment() {
         accountSettingsDialog.show()
 
         accountSettingsDialog.findViewById<Button>(R.id.saveDataButton)?.setOnClickListener {
-            uploadDataToCloud()
-            accountSettingsDialog.dismiss()
+            val confirmView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
+            val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(confirmView)
+            val confirmDialog = confirmDialogBuilder.create()
+
+            confirmView.findViewById<TextView>(R.id.nameTextView).text = "Save data? This will overwrite data on the cloud."
+
+            confirmView.findViewById<Button>(R.id.yesButton).setOnClickListener  {
+                uploadDataToCloud()
+                confirmDialog.dismiss()
+                accountSettingsDialog.dismiss()
+            }
+
+            confirmView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                confirmDialog.dismiss()
+            }
+
+            confirmDialog.show()
         }
 
         accountSettingsDialog.findViewById<Button>(R.id.loadDataButton)?.setOnClickListener {
@@ -202,7 +214,7 @@ class SettingsFragment : Fragment() {
             val confirmDeleteView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
             val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setView(confirmDeleteView)
-            val deleteDialog = confirmDialogBuilder.create()
+            val confirmDeleteDialog = confirmDialogBuilder.create()
 
             confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
 
@@ -212,10 +224,10 @@ class SettingsFragment : Fragment() {
             }
 
             confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
-                deleteDialog.dismiss()
+                confirmDeleteDialog.dismiss()
             }
 
-            deleteDialog.show()
+            confirmDeleteDialog.show()
         }
     }
 

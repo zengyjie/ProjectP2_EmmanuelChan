@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/saveDataButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
                 app:backgroundTint="#00FFFFFF"
                 app:cornerRadius="4dp" />
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/loadDataButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -70,7 +70,7 @@
                 app:cornerRadius="4dp" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/clearDataButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
