@@ -633,16 +633,17 @@ class FridgeActivity : AppCompatActivity() {
                 .setView(modeSelectDialogView)
             val modeSelectDialog = dialogBuilder.create()
 
-            modeSelectDialog.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
+            modeSelectDialogView.findViewById<Button>(R.id.chooseCameraButton)?.setOnClickListener {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
                     val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                     cameraLauncher.launch(cameraIntent)
                 }
+                modeSelectDialog.dismiss()
             }
 
-            modeSelectDialog.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
+            modeSelectDialogView.findViewById<Button>(R.id.chooseGalleryButton)?.setOnClickListener {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                     galleryPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
                 } else {
@@ -650,10 +651,16 @@ class FridgeActivity : AppCompatActivity() {
                         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                     galleryLauncher.launch(galleryIntent)
                 }
+                modeSelectDialog.dismiss()
             }
+
+            modeSelectDialog.show()
         }
 
+        dialogView.findViewById<ImageButton>(R.id.revertImageButton).visibility = View.GONE
+
         val saveButton = dialogView.findViewById<Button>(R.id.saveWineButton)
+        saveButton.text = "add"
         saveButton.setOnClickListener {
             var isValid = true
 

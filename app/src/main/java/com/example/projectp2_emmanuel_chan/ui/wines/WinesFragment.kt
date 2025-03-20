@@ -412,7 +412,6 @@ class WinesFragment : Fragment() {
             filteredList.filter { wine -> wine.parentFridge != "drunk" }
         }
 
-        // Sorting
         when (filter.sort) {
             "A-Z" -> filteredList = filteredList.sortedBy { normalize(it.name) }
             "Z-A" -> filteredList = filteredList.sortedByDescending { normalize(it.name) }
@@ -428,6 +427,7 @@ class WinesFragment : Fragment() {
         } else {
             binding.noWinesTextView.visibility = View.GONE
         }
+        binding.allWinesRecyclerView.adapter?.notifyDataSetChanged()
     }
 
     private fun showFilterDialog() {
@@ -706,9 +706,8 @@ class WinesFragment : Fragment() {
 
         override fun onBindViewHolder(holder: AllWinesViewHolder, i: Int) {
             val tempWine = wines[i]
-            if (tempWine.imagePath != "null") {
-                loadImage(tempWine.imagePath, holder.wineImageView)
-            }
+            if (tempWine.imagePath != "null") { loadImage(tempWine.imagePath, holder.wineImageView) }
+            else { holder.wineImageView.setImageResource(R.drawable.bottle_front) }
             holder.wineNameTextView.text = tempWine.name
             holder.wineDescTextView.text = tempWine.year.toString()
             holder.itemView.setOnClickListener { onWineClick(tempWine) }
