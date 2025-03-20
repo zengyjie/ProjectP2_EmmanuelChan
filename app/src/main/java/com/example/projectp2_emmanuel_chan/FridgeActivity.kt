@@ -998,10 +998,32 @@ class FridgeActivity : AppCompatActivity() {
             holder.itemView.setOnClickListener {
                 if (moving && wine.name == "null") {(holder.itemView.context as? FridgeActivity)?.moveWine(position) }
                 else if (wine.name == "null") {
-                    (holder.itemView.context as? FridgeActivity)?.showAddWineDialog(position)
+                    val isOnLowestRow = indices[2] == fridge.rps - 1
+                    val hasWineBelow = try { fridge.wines[selectedLayer][indices[1]][indices[2] + 1][indices[3]].name != "null" } catch (_: Exception) { false }
+                    val hasWineLeft = try { fridge.wines[selectedLayer][indices[1]][indices[2] + 1][indices[3] - 1].name != "null" } catch (_: Exception) { true }
+                    val hasWineRight = try { fridge.wines[selectedLayer][indices[1]][indices[2] + 1][indices[3] + 1].name != "null" } catch (_: Exception) { true }
+                    if (isOnLowestRow || (hasWineBelow && (hasWineLeft || hasWineRight))) {
+                        (holder.itemView.context as? FridgeActivity)?.showAddWineDialog(position)
+                    } else {
+                        val confirmDialogView = LayoutInflater.from(holder.itemView.context).inflate(R.layout.confirm_delete, null)
+                        val confirmDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(holder.itemView.context)
+                            .setView(confirmDialogView)
+                        val confirmDialog = confirmDialogBuilder.create()
+
+                        confirmDialogView.findViewById<TextView>(R.id.nameTextView).text = "Add wine here? The position might be unstable."
+                        confirmDialogView.findViewById<Button>(R.id.yesButton).setOnClickListener {
+                            (holder.itemView.context as? FridgeActivity)?.showAddWineDialog(position)
+                            confirmDialog.dismiss()
+                        }
+                        confirmDialogView.findViewById<Button>(R.id.noButton).setOnClickListener {
+                            confirmDialog.dismiss()
+                        }
+                        confirmDialog.show()
+                    }
                 }
                 else { (holder.itemView.context as? FridgeActivity)?.openWine(wine, position) }
             }
+
             holder.itemView.setOnTouchListener { v, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {

@@ -60,6 +60,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
+import java.text.Normalizer
 
 class WinesFragment : Fragment() {
 
@@ -385,32 +386,48 @@ class WinesFragment : Fragment() {
         val sort: String = "A-Z"
     )
 
+    private fun normalize(text: String): String {
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+            .lowercase()
+    }
+
     private fun filterWines(filter: Filter, wines: MutableList<FridgesFragment.Wine>) {
         var filteredList = wines.filter { wine ->
             (filter.year == null || wine.year == filter.year) &&
                     (filter.minPrice == null || wine.price >= filter.minPrice) &&
                     (filter.maxPrice == null || wine.price <= filter.maxPrice) &&
-                    (filter.type.isNullOrEmpty() || wine.type.equals(filter.type, ignoreCase = true)) &&
-                    (filter.vineyard.isNullOrEmpty() || wine.vineyard.contains(filter.vineyard, ignoreCase = true)) &&
-                    (filter.region.isNullOrEmpty() || wine.region.contains(filter.region, ignoreCase = true)) &&
-                    (filter.country.isNullOrEmpty() || wine.parentFridge.contains(filter.country, ignoreCase = true)) &&
+                    (filter.type.isNullOrEmpty() || normalize(wine.type) == normalize(filter.type)) &&
+                    (filter.vineyard.isNullOrEmpty() || normalize(wine.vineyard).contains(normalize(filter.vineyard))) &&
+                    (filter.region.isNullOrEmpty() || normalize(wine.region).contains(normalize(filter.region))) &&
+                    (filter.country.isNullOrEmpty() || normalize(wine.parentFridge).contains(normalize(filter.country))) &&
                     (filter.minRating == null || wine.rating >= filter.minRating) &&
                     (filter.maxRating == null || wine.rating <= filter.maxRating) &&
-                    (filter.name.isNullOrEmpty() || wine.name.contains(filter.name!!, ignoreCase = true))
+                    (filter.name.isNullOrEmpty() || normalize(wine.name).contains(normalize(filter.name!!)))
         }
-        filteredList = if (filter.drunk) { filteredList.filter { wine -> wine.parentFridge == "drunk"} }
-        else { filteredList.filter { wine -> wine.parentFridge != "drunk"} }
 
-        if (filter.sort == "A-Z") { filteredList = filteredList.sortedBy { it.name } }
-        if (filter.sort == "Z-A") { filteredList = filteredList.sortedByDescending { it.name } }
-        if (filter.sort == "Price: increasing") { filteredList = filteredList.sortedBy { it.price } }
-        if (filter.sort == "Price: decreasing") { filteredList = filteredList.sortedByDescending { it.price } }
-        if (filter.sort == "Year: increasing") { filteredList = filteredList.sortedBy { it.year } }
-        if (filter.sort == "Year: decreasing") { filteredList = filteredList.sortedByDescending { it.year } }
+        filteredList = if (filter.drunk) {
+            filteredList.filter { wine -> wine.parentFridge == "drunk" }
+        } else {
+            filteredList.filter { wine -> wine.parentFridge != "drunk" }
+        }
+
+        // Sorting
+        when (filter.sort) {
+            "A-Z" -> filteredList = filteredList.sortedBy { normalize(it.name) }
+            "Z-A" -> filteredList = filteredList.sortedByDescending { normalize(it.name) }
+            "Price: increasing" -> filteredList = filteredList.sortedBy { it.price }
+            "Price: decreasing" -> filteredList = filteredList.sortedByDescending { it.price }
+            "Year: increasing" -> filteredList = filteredList.sortedBy { it.year }
+            "Year: decreasing" -> filteredList = filteredList.sortedByDescending { it.year }
+        }
 
         allWinesAdapter.updateList(filteredList)
-        if (filteredList.isEmpty()) { binding.noWinesTextView.visibility = View.VISIBLE }
-        else { binding.noWinesTextView.visibility = View.GONE }
+        if (filteredList.isEmpty()) {
+            binding.noWinesTextView.visibility = View.VISIBLE
+        } else {
+            binding.noWinesTextView.visibility = View.GONE
+        }
     }
 
     private fun showFilterDialog() {
