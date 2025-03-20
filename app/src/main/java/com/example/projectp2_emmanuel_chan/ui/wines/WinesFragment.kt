@@ -114,6 +114,7 @@ class WinesFragment : Fragment() {
             filterWines(filter, currentWineSet)
         }
 
+
         binding.myWinesToggleButton.isChecked = true
 
         var myWinesListener = CompoundButton.OnCheckedChangeListener { _, _ -> (return@OnCheckedChangeListener)}
@@ -381,6 +382,7 @@ class WinesFragment : Fragment() {
         val maxRating: Double? = null,
         var name: String? = null,
         val drunk: Boolean = false,
+        val sort: String = "A-Z"
     )
 
     private fun filterWines(filter: Filter, wines: MutableList<FridgesFragment.Wine>) {
@@ -399,7 +401,16 @@ class WinesFragment : Fragment() {
         filteredList = if (filter.drunk) { filteredList.filter { wine -> wine.parentFridge == "drunk"} }
         else { filteredList.filter { wine -> wine.parentFridge != "drunk"} }
 
+        if (filter.sort == "A-Z") { filteredList = filteredList.sortedBy { it.name } }
+        if (filter.sort == "Z-A") { filteredList = filteredList.sortedByDescending { it.name } }
+        if (filter.sort == "Price: increasing") { filteredList = filteredList.sortedBy { it.price } }
+        if (filter.sort == "Price: decreasing") { filteredList = filteredList.sortedByDescending { it.price } }
+        if (filter.sort == "Year: increasing") { filteredList = filteredList.sortedBy { it.year } }
+        if (filter.sort == "Year: decreasing") { filteredList = filteredList.sortedByDescending { it.year } }
+
         allWinesAdapter.updateList(filteredList)
+        if (filteredList.isEmpty()) { binding.noWinesTextView.visibility = View.VISIBLE }
+        else { binding.noWinesTextView.visibility = View.GONE }
     }
 
     private fun showFilterDialog() {
@@ -540,6 +551,8 @@ class WinesFragment : Fragment() {
 
         val drunkCheckBox = dialogView.findViewById<CheckBox>(R.id.drunkCheckBox)
 
+        val sortSpinner = dialogView.findViewById<Spinner>(R.id.sortSpinner)
+
         yearTextView.text = filter.year?.toString() ?: "Select Year"
         yearCheckBox.isChecked = filter.year != null
 
@@ -564,6 +577,9 @@ class WinesFragment : Fragment() {
         ratingCheckBox.isChecked = filter.minRating != null || filter.maxRating != null
 
         drunkCheckBox.isChecked = filter.drunk
+
+        setupSpinner(sortSpinner, listOf("A-Z", "Z-A", "Price: increasing", "Price: decreasing", "Year: increasing", "Year: decreasing"), filter.type)
+        typeCheckBox.isChecked = filter.type != null
 
         yearPickerButton.setOnClickListener {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
@@ -616,11 +632,19 @@ class WinesFragment : Fragment() {
                 country = if (countryCheckBox.isChecked) countrySpinner.selectedItem?.toString() else null,
                 minRating = if (ratingCheckBox.isChecked) minRatingButton.text.toString().toDoubleOrNull() else null,
                 maxRating = if (ratingCheckBox.isChecked) maxRatingButton.text.toString().toDoubleOrNull() else null,
-                drunk = drunkCheckBox.isChecked
+                drunk = drunkCheckBox.isChecked,
+                sort = sortSpinner.selectedItem.toString()
             )
 
             filterWines(filter, currentWineSet)
             dialog.dismiss()
+        }
+
+        dialogView.findViewById<Button>(R.id.clearFilterButton).setOnClickListener {
+            filter = Filter()
+            filterWines(filter, currentWineSet)
+            dialog.dismiss()
+            Toast.makeText(context, "Filter cleared", Toast.LENGTH_SHORT).show()
         }
 
         dialog.show()

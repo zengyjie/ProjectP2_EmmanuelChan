@@ -326,7 +326,7 @@ class FridgeActivity : AppCompatActivity() {
                     adapter2?.notifyDataSetChanged()
                     deleteDialog.dismiss()
                     dialog.dismiss()
-                    Toast.makeText(context, "${wine.name} saved", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${wine.name} deleted", Toast.LENGTH_SHORT).show()
                 }
 
                 confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {

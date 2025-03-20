@@ -181,8 +181,9 @@ class SettingsFragment : Fragment() {
         val accountSettingsDialogBuilder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setView(accountSettingsView)
         val accountSettingsDialog = accountSettingsDialogBuilder.create()
-
         accountSettingsDialog.show()
+
+        accountSettingsView.findViewById<TextView>(R.id.accountDialogTextView)?.text = "${auth.currentUser?.displayName}"
 
         accountSettingsDialog.findViewById<Button>(R.id.saveDataButton)?.setOnClickListener {
             val confirmView = LayoutInflater.from(context).inflate(R.layout.confirm_delete, null)
