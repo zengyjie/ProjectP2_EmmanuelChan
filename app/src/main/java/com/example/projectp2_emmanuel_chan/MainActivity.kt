@@ -1,12 +1,11 @@
 package com.example.projectp2_emmanuel_chan
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -15,12 +14,11 @@ import com.example.projectp2_emmanuel_chan.databinding.ActivityMainBinding
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Fridge
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Wine
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Filter
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import androidx.core.content.edit
 
-//todo onboarding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding

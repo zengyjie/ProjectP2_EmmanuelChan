@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -27,11 +28,10 @@ import com.example.projectp2_emmanuel_chan.R
 import com.example.projectp2_emmanuel_chan.databinding.FragmentFridgesBinding
 import com.example.projectp2_emmanuel_chan.ui.custom.CustomSpinner
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.io.Serializable
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
-import android.view.MotionEvent
+import java.io.Serializable
 
 class FridgesFragment : Fragment() {
 

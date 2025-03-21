@@ -6,11 +6,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.credentials.CredentialManager
 import androidx.core.content.edit
+import androidx.credentials.CredentialManager
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.projectp2_emmanuel_chan.MainActivity.Companion.fridges
@@ -231,11 +236,13 @@ class SettingsFragment : Fragment() {
                 .setView(confirmDeleteView)
             val confirmDeleteDialog = confirmDialogBuilder.create()
 
-            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
+            confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear cloud data? This action cannot be undone!"
 
             confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener  {
                 clearCloudData()
-                Toast.makeText(requireContext(), "All data cleared successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Data cleared successfully", Toast.LENGTH_SHORT).show()
+                confirmDeleteDialog.dismiss()
+                accountSettingsDialog.dismiss()
             }
 
             confirmDeleteView.findViewById<Button>(R.id.noButton).setOnClickListener {
@@ -252,7 +259,7 @@ class SettingsFragment : Fragment() {
             .setView(confirmDeleteView)
         val deleteDialog = confirmDialogBuilder.create()
 
-        confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear data? This action cannot be undone!"
+        confirmDeleteView.findViewById<TextView>(R.id.nameTextView).text = "Clear local data? This action cannot be undone!"
 
         confirmDeleteView.findViewById<Button>(R.id.yesButton).setOnClickListener {
             val wineWiseDir = File(requireContext().filesDir, "WineWise")
@@ -263,11 +270,9 @@ class SettingsFragment : Fragment() {
             }
             fridges.clear()
             val sharedPreferences = requireActivity().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-            // Keep the user signed in even after clearing app data
             val signedInUser = auth.currentUser != null
             sharedPreferences.edit().clear().apply()
             if (signedInUser) {
-                // Preserve that the user is signed in
                 sharedPreferences.edit { putBoolean("user_signed_in", true) }
             }
             FridgesFragment.saveFridges(requireContext())

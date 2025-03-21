@@ -3,11 +3,9 @@ package com.example.projectp2_emmanuel_chan.ui.custom
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat.getSystemService
 import com.example.projectp2_emmanuel_chan.R
 
 class CustomSpinner : LinearLayout {

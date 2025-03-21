@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -38,6 +37,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectp2_emmanuel_chan.MainActivity.Companion.fridges
@@ -54,7 +54,6 @@ import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.itemLayer
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Companion.saveFridges
 import com.example.projectp2_emmanuel_chan.ui.fridges.FridgesFragment.Wine
-import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.findWine
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.getPairingSuggestion
 import com.example.projectp2_emmanuel_chan.ui.wines.WinesFragment.Companion.loadImage
@@ -65,7 +64,6 @@ import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import androidx.core.graphics.toColorInt
 
 class FridgeActivity : AppCompatActivity() {
 
@@ -232,6 +230,7 @@ class FridgeActivity : AppCompatActivity() {
             val priceInput = dialogView.findViewById<TextInputEditText>(R.id.editPrice)
             val drinkByInput = dialogView.findViewById<TextInputEditText>(R.id.editDrinkBy)
             val descriptionInput = dialogView.findViewById<TextInputEditText>(R.id.editDescription)
+            val countryInput = dialogView.findViewById<TextInputEditText>(R.id.editCountry)
 
             nameInput.setText(wine.name)
             yearInput.setText(wine.year.toString())
@@ -242,6 +241,7 @@ class FridgeActivity : AppCompatActivity() {
             priceInput.setText(wine.price.toString())
             drinkByInput.setText(wine.drinkBy.toString())
             descriptionInput.setText(wine.description)
+            countryInput.setText(wine.country)
 
             val saveBtn = dialogView.findViewById<Button>(R.id.saveWineButton)
             saveBtn.text = "Save"
@@ -276,6 +276,7 @@ class FridgeActivity : AppCompatActivity() {
                 isValid = validateField(vineyardInput, "Vineyard is required") && isValid
                 isValid = validateField(regionInput, "Region is required") && isValid
                 isValid = validateField(varietyInput, "Variety is required") && isValid
+                isValid = validateField(countryInput, "Country is required") && isValid
 
                 val year = validateNumberField(yearInput, "Invalid year", 1000, 2100) ?: run { isValid = false; 0 }
                 val rating = validateDoubleField(ratingInput, "Rating must be between 0 and 100") ?: run { isValid = false; 0.0 }
@@ -839,6 +840,10 @@ class FridgeActivity : AppCompatActivity() {
             binding.movingButtonsLayout.visibility = View.VISIBLE
 
             binding.changeFridgeButton.setOnClickListener {
+                if (fridges.size == 1) {
+                    Toast.makeText(this, "No other fridges available", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 val dialogView1 = LayoutInflater.from(this).inflate(R.layout.select_fridge, null)
                 val dialogBuilder1 = AlertDialog.Builder(this).setView(dialogView1)
                 val dialog1 = dialogBuilder1.create()
@@ -883,6 +888,10 @@ class FridgeActivity : AppCompatActivity() {
             binding.movingButtonsLayout.visibility = View.VISIBLE
 
             binding.changeFridgeButton.setOnClickListener {
+                if (fridges.size == 1) {
+                    Toast.makeText(this, "No other fridges available", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 val dialogView1 = LayoutInflater.from(this).inflate(R.layout.select_fridge, null)
                 val dialogBuilder1 = AlertDialog.Builder(this).setView(dialogView1)
                 val dialog1 = dialogBuilder1.create()
@@ -893,7 +902,7 @@ class FridgeActivity : AppCompatActivity() {
                 val availableFridges = fridges.filter { it.name != selectedFridge.name }
 
                 val fridgeNames = availableFridges.map { it.name }
-                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fridgeNames)
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, fridgeNames.filter { it != "drunk" })
                 fridgeSpinner.adapter = adapter
 
                 openChangedFridgeButton.setOnClickListener {
