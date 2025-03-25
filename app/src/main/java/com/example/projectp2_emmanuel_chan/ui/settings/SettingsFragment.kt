@@ -1,6 +1,13 @@
 package com.example.projectp2_emmanuel_chan.ui.settings
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,6 +21,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.credentials.CredentialManager
 import androidx.fragment.app.Fragment
@@ -34,6 +44,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import java.util.Calendar
 
 class SettingsFragment : Fragment() {
 
@@ -49,7 +60,54 @@ class SettingsFragment : Fragment() {
 
     companion object {
         private const val TAG = "SettingsFragment"
+        fun getExpiredWines(): List<FridgesFragment.Wine> {
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            return fridges.flatMap { fridge ->
+                fridge.wines.flatten().flatten().flatten()
+            }.filter { wine ->
+                wine.drinkBy != null &&
+                        wine.drinkBy < currentYear &&
+                        wine.parentFridge != "drunk"
+            }
+        }
+
+        fun sendWineNotification(context: Context) {
+            val wines = getExpiredWines()
+            if (wines.isEmpty()) { return }
+            val channelId = "wines_channel"
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    channelId,
+                    "Wines to drink",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+                val manager = context.getSystemService(NotificationManager::class.java)
+                manager.createNotificationChannel(channel)
+            }
+
+            val notificationManager = NotificationManagerCompat.from(context)
+            val intent = Intent(context, this::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("You have ${wines.size} wines past the drink-by date")
+                .setContentText(wines.take(wines.size).joinToString("\n") { "${it.name} (${it.year})" })
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) { return }
+
+            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        }
     }
+
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -86,6 +144,29 @@ class SettingsFragment : Fragment() {
         binding.accountSettingsButton.setOnClickListener { showAccountSettingsDialog() }
 
         binding.clearAllButton.setOnClickListener { showClearDataDialog() }
+
+        binding.contactUsButton.setOnClickListener {
+            val emailIntent = Intent(Intent.ACTION_SEND)
+            emailIntent.type = "message/rfc822"
+            emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf("winewise@gmail.com"))
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Contact Us")
+            startActivity(Intent.createChooser(emailIntent, "Send Email"))
+        }
+
+        val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+        binding.notificationsSwitch.isChecked = sharedPreferences.getBoolean("notifications_enabled", false)
+
+        binding.notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val sharedPreferences = requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            sharedPreferences.edit().putBoolean("notifications_enabled", isChecked).apply()
+
+            if (isChecked) {
+                sendWineNotification(requireContext())
+                Toast.makeText(requireContext(), "Notifications enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Notifications disabled", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         return root
     }

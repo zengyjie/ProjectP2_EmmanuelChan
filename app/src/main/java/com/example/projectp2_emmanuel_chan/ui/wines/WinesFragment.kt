@@ -541,6 +541,7 @@ class WinesFragment : Fragment() {
         val dialogBuilder = AlertDialog.Builder(requireContext()).setView(dialogView)
         val dialog = dialogBuilder.create()
 
+        val allTypes = currentWineSet.map { it.type }.filter { it.isNotEmpty() }.distinct().sorted()
         val allVineyards = currentWineSet.map { it.vineyard }.filter { it.isNotEmpty() }.distinct().sorted()
         val allRegions = currentWineSet.map { it.region }.filter { it.isNotEmpty() }.distinct().sorted()
         val allCountries = currentWineSet.map { it.country }.filter { it.isNotEmpty() }.distinct().sorted()
@@ -573,7 +574,7 @@ class WinesFragment : Fragment() {
         yearTextView.text = filter.year?.toString() ?: "Select Year"
         yearCheckBox.isChecked = filter.year != null
 
-        setupSpinner(wineTypeSpinner, listOf("Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified"), filter.type)
+        setupSpinner(wineTypeSpinner, allTypes, filter.type)
         typeCheckBox.isChecked = filter.type != null
 
         setupSpinner(vineyardSpinner, allVineyards, filter.vineyard)
@@ -595,8 +596,7 @@ class WinesFragment : Fragment() {
 
         drunkCheckBox.isChecked = filter.drunk
 
-        setupSpinner(sortSpinner, listOf("A-Z", "Z-A", "Price: increasing", "Price: decreasing", "Year: increasing", "Year: decreasing"), filter.type)
-        typeCheckBox.isChecked = filter.type != null
+        setupSpinner(sortSpinner, listOf("A-Z", "Z-A", "Price: Increasing", "Price: Decreasing", "Year: Increasing", "Year: Decreasing"), filter.sort)
 
         yearPickerButton.setOnClickListener {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
