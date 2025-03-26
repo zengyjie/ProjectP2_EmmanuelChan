@@ -798,6 +798,7 @@ class FridgeActivity : AppCompatActivity() {
             selectedWine = wine
             selectedFridge = fridges[getFridge("drunk")]
             val indices = getIndicesFromPosition(selectedFridge.counter, selectedFridge)
+            val origPFridge = wine.parentFridge
             selectedFridge.wines[indices[0]][indices[1]][indices[2]][indices[3]] = Wine(
                 selectedWine.name,
                 selectedWine.price,
@@ -815,8 +816,8 @@ class FridgeActivity : AppCompatActivity() {
                 "drunk"
             )
             selectedWine = Wine()
-            val indices1 = getIndicesFromPosition(position, selectedFridge)
-            fridges[getFridge(wine.parentFridge)].wines[indices1[0]][indices1[1]][indices1[2]][indices1[3]] = Wine()
+            val indices1 = getIndicesFromPosition(position, fridges[getFridge(origPFridge)])
+            fridges[getFridge(origPFridge)].wines[indices1[0]][indices1[1]][indices1[2]][indices1[3]] = Wine()
             Toast.makeText(applicationContext, "Marked drunk", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
             fridges[getFridge("drunk")].counter++

@@ -7,11 +7,15 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Typeface
 import android.icu.util.Calendar
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
 import android.text.TextWatcher
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -209,9 +213,30 @@ class WinesFragment : Fragment() {
         }
 
         dialogView.findViewById<TextView>(R.id.wineInfoNameTextView)?.text = "${wine.name}\n(${wine.year})"
-        dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text =
-            "${wine.vineyard}\n${wine.type} Wine from ${wine.region}, ${wine.country}\nVariety: ${wine.grapeVariety}\nRating: " +
-            "${wine.rating} / 100\nNotes:\n${wine.description}\nDrink by: ${wine.drinkBy}\nBought at: $${wine.price}"
+        val descText = SpannableStringBuilder()
+        descText.append("${wine.vineyard}\n")
+        descText.append("${wine.type} Wine from ${wine.region}, ${wine.country}\n")
+        descText.append("Variety: ").apply {
+            descText.setSpan(StyleSpan(Typeface.BOLD), descText.length - "Variety: ".length, descText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        descText.append("${wine.grapeVariety}\n")
+        descText.append("Rating: ").apply {
+            descText.setSpan(StyleSpan(Typeface.BOLD), descText.length - "Rating: ".length, descText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        descText.append("${wine.rating} / 100\n")
+        descText.append("Notes:\n").apply {
+            descText.setSpan(StyleSpan(Typeface.BOLD), descText.length - "Notes:\n".length, descText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        descText.append("${wine.description}\n")
+        descText.append("Drink by: ").apply {
+            descText.setSpan(StyleSpan(Typeface.BOLD), descText.length - "Drink by: ".length, descText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        descText.append("${wine.drinkBy}\n")
+        descText.append("Bought at: ").apply {
+            descText.setSpan(StyleSpan(Typeface.BOLD), descText.length - "Bought at: ".length, descText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        descText.append("$${wine.price}")
+        dialogView.findViewById<TextView>(R.id.wineInfoDescTextView)?.text = descText
 
         dialogView.findViewById<ImageButton>(R.id.showPairingsButton).setOnClickListener {
             val dialogView1 = LayoutInflater.from(requireContext()).inflate(R.layout.wine_pairings, null)
