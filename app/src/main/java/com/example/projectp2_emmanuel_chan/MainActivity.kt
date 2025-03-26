@@ -1,7 +1,7 @@
 package com.example.projectp2_emmanuel_chan
 
-import android.app.NotificationManager
 import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -22,7 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-//todo contactus,notify
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -54,11 +54,11 @@ class MainActivity : AppCompatActivity() {
             0 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Default)
             1 -> setTheme(R.style.Theme_ProjectP2_EmmanuelChan_Dark)
         }
-        if (!sharedPreferences.getBoolean("has_run", true)) {
+        if (sharedPreferences.getBoolean("first_run", true)) {
             startActivity(Intent(this, OnboardingActivity::class.java))
         }
         extractAssets()
-        sharedPreferences.edit { putBoolean("has_run", true) }
+        sharedPreferences.edit { putBoolean("first_run", false) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "your_channel_id"
