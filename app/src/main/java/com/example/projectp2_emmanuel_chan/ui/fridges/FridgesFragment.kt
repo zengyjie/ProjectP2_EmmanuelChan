@@ -152,6 +152,9 @@ class FridgesFragment : Fragment() {
         val dialog = dialogBuilder.create()
         dialogView.findViewById<Button>(R.id.deleteButton).visibility = View.GONE
 
+        dialogView.findViewById<CustomSpinner>(R.id.sectionsCustomSpinner)?.updateCount(4)
+        dialogView.findViewById<CustomSpinner>(R.id.rpsCustomSpinner)?.updateCount(1)
+        dialogView.findViewById<CustomSpinner>(R.id.columnsCustomSpinner)?.updateCount(5)
         dialogView.findViewById<Button>(R.id.confirmButton)?.setOnClickListener {
             val fridge = readFridgeData(dialogView)
             if (!(fridge.name == "InvalidName" || fridge.name == "drunk")) { addFridge(fridge) } else { return@setOnClickListener }
