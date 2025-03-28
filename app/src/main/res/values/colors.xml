@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="tan_light">#FDF6E3</color>
-    <color name="tan_dark">#E9D8B8</color>
+    <color name="tan_dark">#E4D8B8</color>
     <color name="white">#F0F0F0</color>
     <color name="black">#000000</color>
     <color name="dark_gray">#444444</color>
