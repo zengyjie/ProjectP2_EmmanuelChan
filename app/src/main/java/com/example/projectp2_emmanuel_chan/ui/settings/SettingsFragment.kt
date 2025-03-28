@@ -24,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.credentials.CredentialManager
 import androidx.fragment.app.Fragment
@@ -130,6 +131,7 @@ class SettingsFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        requestNotificationPermission()
         auth = FirebaseAuth.getInstance()
         signInClient = Identity.getSignInClient(requireActivity())
         credentialManager = CredentialManager.create(requireContext())
@@ -429,6 +431,22 @@ class SettingsFragment : Fragment() {
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Download failed", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    100
+                )
+            }
+        }
     }
 
     private fun clearCloudData() {
