@@ -1058,7 +1058,11 @@ class FridgeActivity : AppCompatActivity() {
             private val wineImageView: ImageView = view.findViewById(R.id.wineImageView)
 
             fun bind(wine: Wine?) {
-                if (wine == null || wine.name == "null") { wineImageView.setImageResource(R.drawable.ic_add) }
+                wineImageView.clearColorFilter()
+                if (wine == null || wine.name == "null") {
+                    wineImageView.setImageResource(R.drawable.ic_dotted_circle)
+                    wineImageView.setColorFilter("#AAAAAA".toColorInt(), PorterDuff.Mode.SRC_IN)
+                }
                 else if (highlightedWineName == wine.name) {
                     highlightedWineName = "null"
                     wineImageView.setColorFilter("#EE5555".toColorInt(), PorterDuff.Mode.SRC_IN)
